@@ -1,0 +1,129 @@
+local ToolModule = {}
+
+-- Tool creation functions
+local ToolCreators = {
+	Awaken = function(localPlayer)
+		local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+		local backpack = localPlayer.Backpack
+		
+		-- Check if already exists
+		local existing = backpack:FindFirstChild("Awaken") or character:FindFirstChild("Awaken")
+		if existing then return existing end
+		
+		local awakenTool = Instance.new("Tool")
+		awakenTool.Name = "Awaken"
+		awakenTool.RequiresHandle = false
+		
+		awakenTool.Equipped:Connect(function()
+			spawn(function()
+				local char = localPlayer.Character
+				if char and char:FindFirstChild("Humanoid") and char:FindFirstChild("Torso") then
+					local humanoid = char.Humanoid
+					local torso = char.Torso
+					
+					humanoid.PlatformStand = true
+					
+					local sound = Instance.new("Sound")
+					sound.SoundId = "rbxassetid://72595772791920"
+					sound.Volume = 0.5
+					sound.Parent = torso
+					sound:Play()
+					
+					local bodyVelocity = Instance.new("BodyVelocity")
+					bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+					bodyVelocity.Velocity = torso.CFrame.LookVector * -50 + Vector3.new(0, -30, 0)
+					bodyVelocity.Parent = torso
+					
+					local bodyAngularVelocity = Instance.new("BodyAngularVelocity")
+					bodyAngularVelocity.MaxTorque = Vector3.new(0, 0, math.huge)
+					bodyAngularVelocity.AngularVelocity = Vector3.new(0, 0, 10)
+					bodyAngularVelocity.Parent = torso
+					
+					game:GetService("Debris"):AddItem(bodyVelocity, 0.5)
+					game:GetService("Debris"):AddItem(bodyAngularVelocity, 0.5)
+					
+					wait(9)
+					sound:Destroy()
+					humanoid.PlatformStand = false
+				end
+			end)
+		end)
+		
+		awakenTool.Parent = backpack
+		return awakenTool
+	end,
+	
+	Oblivious = function(localPlayer)
+		local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+		local backpack = localPlayer.Backpack
+		
+		-- Check if already exists
+		local existing = backpack:FindFirstChild("Oblivious") or character:FindFirstChild("Oblivious")
+		if existing then return existing end
+		
+		local obliviousTool = Instance.new("Tool")
+		obliviousTool.Name = "Oblivious"
+		obliviousTool.RequiresHandle = false
+		
+		local hakiEnabled = false
+		
+		obliviousTool.Equipped:Connect(function()
+			spawn(function()
+				local char = localPlayer.Character
+				if char and char:FindFirstChild("Humanoid") then
+					local humanoid = char.Humanoid
+					
+					hakiEnabled = not hakiEnabled
+					
+					if hakiEnabled then
+						spawn(function()
+							while hakiEnabled do
+								humanoid.WalkSpeed = 5.5
+								task.wait()
+							end
+						end)
+						
+						if localPlayer:FindFirstChild("AutoRun") then
+							localPlayer.AutoRun.Value = false
+						end
+					else
+						humanoid.WalkSpeed = 32
+						if localPlayer:FindFirstChild("AutoRun") then
+							localPlayer.AutoRun.Value = true
+						end
+						hakiEnabled = false
+					end
+				end
+			end)
+		end)
+		
+		obliviousTool.Parent = backpack
+		return obliviousTool
+	end
+	
+	-- Add more tool creators here as needed
+	-- ToolName = function(localPlayer) ... end,
+}
+
+function ToolModule:GetTools(...)
+	local toolNames = {...}
+	local player = game.Players.LocalPlayer
+	local foundTools = {}
+	
+	for _, toolName in ipairs(toolNames) do
+		-- Check if we have a creator for this tool
+		if ToolCreators[toolName] then
+			-- Create or get the tool
+			local tool = ToolCreators[toolName](player)
+			if tool then
+				table.insert(foundTools, tool)
+			end
+		else
+			warn("No creator found for tool: " .. tostring(toolName))
+		end
+	end
+	
+	return foundTools
+end
+
+return ToolModule
