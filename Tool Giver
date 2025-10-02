@@ -366,6 +366,224 @@ local ToolCreators = {
 		return creationTool
 	end,
 	
+		Titanium = function(localPlayer)
+		local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+		local backpack = localPlayer.Backpack
+		
+		-- Check if already exists
+		local existing = backpack:FindFirstChild("Titanium") or character:FindFirstChild("Titanium")
+		if existing then return existing end
+		
+		local titaniumTool = Instance.new("Tool")
+		titaniumTool.Name = "Titanium"
+		titaniumTool.RequiresHandle = false
+		
+		titaniumTool.Equipped:Connect(function()
+			spawn(function()
+				local char = localPlayer.Character
+				if char and char:FindFirstChild("Humanoid") and char:FindFirstChild("HumanoidRootPart") then
+					local humanoid = char.Humanoid
+					local rootPart = char.HumanoidRootPart
+					
+					-- Brute force effects
+					local originalSpeed = humanoid.WalkSpeed
+					local originalJump = humanoid.JumpPower or humanoid.JumpHeight
+					
+					-- Boost stats significantly
+					humanoid.WalkSpeed = 50
+					if humanoid.JumpPower then
+						humanoid.JumpPower = 100
+					else
+						humanoid.JumpHeight = 15
+					end
+					
+					-- Create visual effect (red aura)
+					local aura = Instance.new("Part")
+					aura.Name = "TitaniumAura"
+					aura.Size = Vector3.new(8, 8, 8)
+					aura.Transparency = 0.7
+					aura.Color = Color3.fromRGB(150, 150, 150)
+					aura.Material = Enum.Material.Neon
+					aura.CanCollide = false
+					aura.Anchored = true
+					aura.Parent = workspace
+					
+					-- Damage nearby players
+					local damageActive = true
+					spawn(function()
+						while damageActive and char and rootPart do
+							aura.CFrame = rootPart.CFrame
+							
+							-- Find nearby players
+							for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+								if otherPlayer ~= localPlayer and otherPlayer.Character then
+									local otherRoot = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+									local otherHumanoid = otherPlayer.Character:FindFirstChild("Humanoid")
+									
+									if otherRoot and otherHumanoid then
+										local distance = (rootPart.Position - otherRoot.Position).Magnitude
+										if distance <= 10 then
+											-- Apply damage
+											otherHumanoid:TakeDamage(5)
+											
+											-- Knockback effect
+											local direction = (otherRoot.Position - rootPart.Position).Unit
+											local bodyVelocity = Instance.new("BodyVelocity")
+											bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+											bodyVelocity.Velocity = direction * 50 + Vector3.new(0, 20, 0)
+											bodyVelocity.Parent = otherRoot
+											game:GetService("Debris"):AddItem(bodyVelocity, 0.3)
+										end
+									end
+								end
+							end
+							
+							task.wait(0.5)
+						end
+					end)
+					
+					-- Duration of effect
+					wait(10)
+					
+					damageActive = false
+					aura:Destroy()
+					humanoid.WalkSpeed = originalSpeed
+					if humanoid.JumpPower then
+						humanoid.JumpPower = originalJump
+					else
+						humanoid.JumpHeight = originalJump
+					end
+				end
+			end)
+		end)
+		
+		titaniumTool.Parent = backpack
+		return titaniumTool
+	end,
+	
+	Creation = function(localPlayer)
+		local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+		local backpack = localPlayer.Backpack
+		
+		-- Check if already exists
+		local existing = backpack:FindFirstChild("Creation") or character:FindFirstChild("Creation")
+		if existing then return existing end
+		
+		local creationTool = Instance.new("Tool")
+		creationTool.Name = "Creation"
+		creationTool.RequiresHandle = false
+		
+		local mouse = localPlayer:GetMouse()
+		local creationActive = false
+		local createdParts = {}
+		
+		creationTool.Equipped:Connect(function()
+			spawn(function()
+				local char = localPlayer.Character
+				if char and char:FindFirstChild("HumanoidRootPart") then
+					local rootPart = char.HumanoidRootPart
+					
+					-- Toggle creation mode
+					creationActive = not creationActive
+					
+					if creationActive then
+						-- Create orbiting parts around player
+						local colors = {
+							Color3.fromRGB(255, 100, 255),
+							Color3.fromRGB(100, 255, 255),
+							Color3.fromRGB(255, 255, 100),
+							Color3.fromRGB(100, 255, 100)
+						}
+						
+						for i = 1, 4 do
+							local orb = Instance.new("Part")
+							orb.Name = "CreationOrb"
+							orb.Size = Vector3.new(2, 2, 2)
+							orb.Shape = Enum.PartType.Ball
+							orb.Material = Enum.Material.Neon
+							orb.Color = colors[i]
+							orb.CanCollide = false
+							orb.Anchored = true
+							orb.Parent = workspace
+							table.insert(createdParts, orb)
+						end
+						
+						-- Orbit animation
+						spawn(function()
+							local angle = 0
+							while creationActive and char and rootPart do
+								for i, orb in ipairs(createdParts) do
+									local offset = (i - 1) * (math.pi / 2)
+									local x = math.cos(angle + offset) * 5
+									local z = math.sin(angle + offset) * 5
+									orb.CFrame = rootPart.CFrame * CFrame.new(x, 2, z)
+								end
+								angle = angle + 0.1
+								task.wait()
+							end
+						end)
+						
+						-- Create platforms on mouse click
+						local clickConnection
+						clickConnection = mouse.Button1Down:Connect(function()
+							if creationActive then
+								local platform = Instance.new("Part")
+								platform.Name = "CreatedPlatform"
+								platform.Size = Vector3.new(6, 1, 6)
+								platform.Position = mouse.Hit.Position + Vector3.new(0, 0.5, 0)
+								platform.Anchored = true
+								platform.Material = Enum.Material.Glass
+								platform.Color = Color3.fromRGB(150, 200, 255)
+								platform.Transparency = 0.3
+								platform.Parent = workspace
+								
+								-- Auto-destroy after 15 seconds
+								game:GetService("Debris"):AddItem(platform, 15)
+								
+								-- Visual spawn effect
+								local spawnEffect = Instance.new("Part")
+								spawnEffect.Size = Vector3.new(0.5, 0.5, 0.5)
+								spawnEffect.Position = platform.Position
+								spawnEffect.Anchored = true
+								spawnEffect.CanCollide = false
+								spawnEffect.Material = Enum.Material.Neon
+								spawnEffect.Color = Color3.fromRGB(255, 255, 255)
+								spawnEffect.Shape = Enum.PartType.Ball
+								spawnEffect.Parent = workspace
+								
+								spawn(function()
+									for i = 1, 10 do
+										spawnEffect.Size = spawnEffect.Size + Vector3.new(1, 1, 1)
+										spawnEffect.Transparency = i / 10
+										task.wait(0.05)
+									end
+									spawnEffect:Destroy()
+								end)
+							end
+						end)
+						
+						-- Wait for deactivation
+						repeat task.wait() until not creationActive
+						
+						clickConnection:Disconnect()
+						
+					else
+						-- Clean up orbs
+						for _, orb in ipairs(createdParts) do
+							if orb then
+								orb:Destroy()
+							end
+						end
+						createdParts = {}
+					end
+				end
+			end)
+		end)
+		
+		creationTool.Parent = backpack
+		return creationTool
+	end,
+	
 	["Soul Monarch"] = function(localPlayer)
 		local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
 		local backpack = localPlayer.Backpack
@@ -421,16 +639,18 @@ local ToolCreators = {
 					
 					-- Floating souls animation
 					spawn(function()
-						while effectActive and char and rootPart do
+						while effectActive and char and char.Parent and rootPart and rootPart.Parent do
 							monarchAura.CFrame = rootPart.CFrame
 							
 							for i, soul in ipairs(souls) do
-								local offset = (i - 1) * (math.pi * 2 / 6)
-								local radius = 7 + math.sin(soulAngle * 2) * 2
-								local x = math.cos(soulAngle + offset) * radius
-								local z = math.sin(soulAngle + offset) * radius
-								local y = math.sin(soulAngle * 3 + i) * 3
-								soul.CFrame = rootPart.CFrame * CFrame.new(x, y, z)
+								if soul and soul.Parent then
+									local offset = (i - 1) * (math.pi * 2 / 6)
+									local radius = 7 + math.sin(soulAngle * 2) * 2
+									local x = math.cos(soulAngle + offset) * radius
+									local z = math.sin(soulAngle + offset) * radius
+									local y = math.sin(soulAngle * 3 + i) * 3
+									soul.CFrame = rootPart.CFrame * CFrame.new(x, y, z)
+								end
 							end
 							
 							soulAngle = soulAngle + 0.05
@@ -440,13 +660,13 @@ local ToolCreators = {
 					
 					-- Life steal ability - drain nearby enemies
 					spawn(function()
-						while effectActive and char and rootPart and humanoid.Health > 0 do
+						while effectActive and char and char.Parent and rootPart and rootPart.Parent and humanoid and humanoid.Health > 0 do
 							for _, otherPlayer in pairs(game.Players:GetPlayers()) do
-								if otherPlayer ~= localPlayer and otherPlayer.Character then
+								if otherPlayer ~= localPlayer and otherPlayer.Character and otherPlayer.Character.Parent then
 									local otherRoot = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
 									local otherHumanoid = otherPlayer.Character:FindFirstChild("Humanoid")
 									
-									if otherRoot and otherHumanoid and otherHumanoid.Health > 0 then
+									if otherRoot and otherRoot.Parent and otherHumanoid and otherHumanoid.Health > 0 then
 										local distance = (rootPart.Position - otherRoot.Position).Magnitude
 										if distance <= 15 then
 											-- Drain health
@@ -472,7 +692,9 @@ local ToolCreators = {
 													beam.Transparency = i / 5
 													task.wait(0.05)
 												end
-												beam:Destroy()
+												if beam and beam.Parent then
+													beam:Destroy()
+												end
 											end)
 										end
 									end
@@ -485,7 +707,7 @@ local ToolCreators = {
 					-- Temporary invincibility frames
 					spawn(function()
 						for i = 1, 20 do
-							if humanoid.Health > 0 then
+							if humanoid and humanoid.Parent and humanoid.Health > 0 then
 								humanoid.Health = humanoid.MaxHealth
 							end
 							task.wait(0.5)
@@ -496,9 +718,13 @@ local ToolCreators = {
 					wait(10)
 					
 					effectActive = false
-					monarchAura:Destroy()
+					if monarchAura and monarchAura.Parent then
+						monarchAura:Destroy()
+					end
 					for _, soul in ipairs(souls) do
-						soul:Destroy()
+						if soul and soul.Parent then
+							soul:Destroy()
+						end
 					end
 				end
 			end)
