@@ -126,10 +126,6 @@ local ToolCreators = {
 					local originalSpeed = humanoid.WalkSpeed
 					
 					-- Create spinning effect
-					local bodyAngularVelocity = Instance.new("BodyAngularVelocity")
-					bodyAngularVelocity.MaxTorque = Vector3.new(0, math.huge, 0)
-					bodyAngularVelocity.AngularVelocity = Vector3.new(0, 20, 0)
-					bodyAngularVelocity.Parent = rootPart
 					
 					-- Random speed changes for 5 seconds
 					local startTime = tick()
@@ -143,7 +139,6 @@ local ToolCreators = {
 						
 						-- Restore original speed
 						humanoid.WalkSpeed = originalSpeed
-						bodyAngularVelocity:Destroy()
 					end)
 				end
 			end)
