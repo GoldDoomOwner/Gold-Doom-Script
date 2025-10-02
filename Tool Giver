@@ -1,5 +1,7 @@
 local ToolModule = {}
 
+local Custom_PowerTools = {"Awaken", "Oblivious","Titanium", "Drug Abused", "Soul Monarch", "Creation"}
+
 -- Tool creation functions
 local ToolCreators = {
 	Awaken = function(localPlayer)
@@ -105,12 +107,28 @@ local ToolCreators = {
 	-- ToolName = function(localPlayer) ... end,
 }
 
+-- Check if a tool name is valid
+function ToolModule:IsValidTool(toolName)
+	return table.find(Custom_PowerTools, toolName) ~= nil
+end
+
+-- Get list of available tools
+function ToolModule:GetAvailableTools()
+	return Custom_PowerTools
+end
+
 function ToolModule:GetTools(...)
 	local toolNames = {...}
 	local player = game.Players.LocalPlayer
 	local foundTools = {}
 	
 	for _, toolName in ipairs(toolNames) do
+		-- First check if it's in the valid tools list
+		if not self:IsValidTool(toolName) then
+			warn("Tool not in Custom_PowerTools list: " .. tostring(toolName))
+			continue
+		end
+		
 		-- Check if we have a creator for this tool
 		if ToolCreators[toolName] then
 			-- Create or get the tool
@@ -119,7 +137,7 @@ function ToolModule:GetTools(...)
 				table.insert(foundTools, tool)
 			end
 		else
-			warn("No creator found for tool: " .. tostring(toolName))
+			warn("No creator implemented for tool: " .. tostring(toolName) .. " (add it to ToolCreators)")
 		end
 	end
 	
