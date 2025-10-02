@@ -101,6 +101,56 @@ local ToolCreators = {
 		
 		obliviousTool.Parent = backpack
 		return obliviousTool
+	end,
+	
+	["Drug Abused"] = function(localPlayer)
+		local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+		local backpack = localPlayer.Backpack
+		
+		-- Check if already exists
+		local existing = backpack:FindFirstChild("Drug Abused") or character:FindFirstChild("Drug Abused")
+		if existing then return existing end
+		
+		local drugTool = Instance.new("Tool")
+		drugTool.Name = "Drug Abused"
+		drugTool.RequiresHandle = false
+		
+		drugTool.Equipped:Connect(function()
+			spawn(function()
+				local char = localPlayer.Character
+				if char and char:FindFirstChild("Humanoid") and char:FindFirstChild("HumanoidRootPart") then
+					local humanoid = char.Humanoid
+					local rootPart = char.HumanoidRootPart
+					
+					-- Store original speed
+					local originalSpeed = humanoid.WalkSpeed
+					
+					-- Create spinning effect
+					local bodyAngularVelocity = Instance.new("BodyAngularVelocity")
+					bodyAngularVelocity.MaxTorque = Vector3.new(0, math.huge, 0)
+					bodyAngularVelocity.AngularVelocity = Vector3.new(0, 20, 0)
+					bodyAngularVelocity.Parent = rootPart
+					
+					-- Random speed changes for 5 seconds
+					local startTime = tick()
+					spawn(function()
+						while tick() - startTime < 5 do
+							-- Randomly switch between speed 3 and 200
+							local randomSpeed = math.random(1, 2) == 1 and 3 or 200
+							humanoid.WalkSpeed = randomSpeed
+							task.wait(0.5) -- Change speed every 0.5 seconds
+						end
+						
+						-- Restore original speed
+						humanoid.WalkSpeed = originalSpeed
+						bodyAngularVelocity:Destroy()
+					end)
+				end
+			end)
+		end)
+		
+		drugTool.Parent = backpack
+		return drugTool
 	end
 	
 	-- Add more tool creators here as needed
