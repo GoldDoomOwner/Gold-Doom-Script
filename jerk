@@ -1,117 +1,137 @@
--- Jerk Off UI Tool for Roblox
+-- Jerk Off Tool for Roblox (Player Character Animation)
 -- Place this in StarterGui as a LocalScript
 
 local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local rightArm = character:WaitForChild("RightUpperArm") or character:WaitForChild("Right Arm")
 
 -- Create ScreenGui
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "JerkToolUI"
 screenGui.ResetOnSpawn = false
-screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-
--- Create main frame
-local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 300, 0, 400)
-mainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
-mainFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-mainFrame.BorderSizePixel = 0
-mainFrame.Parent = screenGui
-
--- Add rounded corners
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 12)
-corner.Parent = mainFrame
-
--- Create character body (torso)
-local torso = Instance.new("Frame")
-torso.Size = UDim2.new(0, 100, 0, 120)
-torso.Position = UDim2.new(0.5, -50, 0.4, 0)
-torso.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-torso.BorderSizePixel = 0
-torso.Parent = mainFrame
-
-local torsoCorner = Instance.new("UICorner")
-torsoCorner.CornerRadius = UDim.new(0, 8)
-torsoCorner.Parent = torso
-
--- Create head
-local head = Instance.new("Frame")
-head.Size = UDim2.new(0, 60, 0, 60)
-head.Position = UDim2.new(0.5, -30, -0.7, 0)
-head.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-head.BorderSizePixel = 0
-head.Parent = torso
-
-local headCorner = Instance.new("UICorner")
-headCorner.CornerRadius = UDim.new(1, 0)
-headCorner.Parent = head
-
--- Create ARM (the important part!)
-local arm = Instance.new("Frame")
-arm.Size = UDim2.new(0, 30, 0, 80)
-arm.Position = UDim2.new(1, 5, 0.2, 0)
-arm.AnchorPoint = Vector2.new(0, 0)
-arm.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-arm.BorderSizePixel = 0
-arm.Parent = torso
-arm.ZIndex = 2
-
-local armCorner = Instance.new("UICorner")
-armCorner.CornerRadius = UDim.new(0, 8)
-armCorner.Parent = arm
+screenGui.Parent = player:WaitForChild("PlayerGui")
 
 -- Create button
 local button = Instance.new("TextButton")
-button.Size = UDim2.new(0, 200, 0, 50)
-button.Position = UDim2.new(0.5, -100, 0.85, 0)
+button.Size = UDim2.new(0, 200, 0, 60)
+button.Position = UDim2.new(0.5, -100, 0.9, -70)
 button.BackgroundColor3 = Color3.fromRGB(120, 70, 200)
 button.Text = "Jerk Off"
 button.TextColor3 = Color3.fromRGB(255, 255, 255)
-button.TextSize = 20
+button.TextSize = 24
 button.Font = Enum.Font.GothamBold
 button.BorderSizePixel = 0
-button.Parent = mainFrame
+button.Parent = screenGui
 
 local buttonCorner = Instance.new("UICorner")
-buttonCorner.CornerRadius = UDim.new(0, 10)
+buttonCorner.CornerRadius = UDim.new(0, 12)
 buttonCorner.Parent = button
+
+-- Make button draggable
+local dragging = false
+local dragInput, mousePos, framePos
+
+button.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        mousePos = input.Position
+        framePos = button.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+button.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - mousePos
+        button.Position = UDim2.new(
+            framePos.X.Scale,
+            framePos.X.Offset + delta.X,
+            framePos.Y.Scale,
+            framePos.Y.Offset + delta.Y
+        )
+    end
+end)
 
 -- Animation variables
 local isJerking = false
-local jerkSpeed = 0.15
-local jerkDistance = 50
+local motor6D = nil
+
+-- Find the right shoulder motor
+local function findRightShoulder()
+    local torso = character:FindFirstChild("UpperTorso") or character:FindFirstChild("Torso")
+    if torso then
+        for _, child in pairs(torso:GetChildren()) do
+            if child:IsA("Motor6D") and (child.Name == "RightShoulder" or child.Name == "Right Shoulder") then
+                return child
+            end
+        end
+    end
+    return nil
+end
+
+motor6D = findRightShoulder()
+
+-- Store original C0
+local originalC0 = motor6D and motor6D.C0 or CFrame.new()
 
 -- Jerk animation function
 local function doJerkMotion()
+    if not motor6D then
+        warn("Could not find right shoulder motor!")
+        return
+    end
+    
     isJerking = true
     button.Text = "Stop"
     button.BackgroundColor3 = Color3.fromRGB(200, 70, 70)
     
     while isJerking do
-        -- Down motion
+        -- Down stroke (fast)
         local downTween = TweenService:Create(
-            arm,
-            TweenInfo.new(jerkSpeed, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-            {Position = UDim2.new(1, 5, 0.2 + jerkDistance/torso.AbsoluteSize.Y, 0)}
+            motor6D,
+            TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+            {C0 = originalC0 * CFrame.Angles(math.rad(45), 0, 0) * CFrame.new(0, -0.3, 0)}
         )
         downTween:Play()
         downTween.Completed:Wait()
         
         if not isJerking then break end
         
-        -- Up motion (faster return)
+        -- Up stroke (faster return)
         local upTween = TweenService:Create(
-            arm,
-            TweenInfo.new(jerkSpeed * 0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-            {Position = UDim2.new(1, 5, 0.2, 0)}
+            motor6D,
+            TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {C0 = originalC0 * CFrame.Angles(math.rad(-10), 0, 0)}
         )
         upTween:Play()
         upTween.Completed:Wait()
+        
+        task.wait(0.05)
     end
     
-    -- Reset position
-    arm.Position = UDim2.new(1, 5, 0.2, 0)
+    -- Reset to original position
+    local resetTween = TweenService:Create(
+        motor6D,
+        TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+        {C0 = originalC0}
+    )
+    resetTween:Play()
+    
     button.Text = "Jerk Off"
     button.BackgroundColor3 = Color3.fromRGB(120, 70, 200)
 end
@@ -138,4 +158,16 @@ button.MouseLeave:Connect(function()
     end
 end)
 
-print("Jerk Tool UI loaded!")
+-- Handle character respawn
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    humanoid = character:WaitForChild("Humanoid")
+    rightArm = character:WaitForChild("RightUpperArm") or character:WaitForChild("Right Arm")
+    motor6D = findRightShoulder()
+    originalC0 = motor6D and motor6D.C0 or CFrame.new()
+    isJerking = false
+    button.Text = "Jerk Off"
+    button.BackgroundColor3 = Color3.fromRGB(120, 70, 200)
+end)
+
+print("Jerk Tool loaded! Click the button to start.")
