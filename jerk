@@ -1,123 +1,99 @@
--- Jerk Tool Script
--- Makes your character jerk/teleport in random directions
+-- Jerk Animation Tool for Roblox
+-- Place this in StarterPlayer > StarterCharacterScripts or ServerScriptService
+
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+-- Configuration
+local JERK_INTENSITY = 2.5 -- How intense the shake is
+local JERK_SPEED = 0.08 -- How fast each jerk happens (lower = faster)
+local JERK_ROTATIONS = true -- Enable rotation jerking
 
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
-local hrp = character:WaitForChild("HumanoidRootPart")
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
--- Configuration
-local jerkEnabled = false
-local jerkIntensity = 5 -- Distance of each jerk
-local jerkSpeed = 0.1 -- Time between jerks (lower = faster)
+local isJerking = false
+local originalCFrame = humanoidRootPart.CFrame
 
--- Create GUI
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "JerkToolGUI"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = player.PlayerGui
-
-local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 200, 0, 100)
-Frame.Position = UDim2.new(0.5, -100, 0.1, 0)
-Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-Frame.BorderSizePixel = 2
-Frame.BorderColor3 = Color3.fromRGB(255, 255, 255)
-Frame.Parent = ScreenGui
-
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 30)
-Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.Text = "Jerk Tool"
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 16
-Title.Parent = Frame
-
-local ToggleButton = Instance.new("TextButton")
-ToggleButton.Size = UDim2.new(0.8, 0, 0, 35)
-ToggleButton.Position = UDim2.new(0.1, 0, 0.45, 0)
-ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleButton.Text = "OFF"
-ToggleButton.Font = Enum.Font.GothamBold
-ToggleButton.TextSize = 14
-ToggleButton.Parent = Frame
-
--- Dragging functionality
-local dragging = false
-local dragInput, mousePos, framePos
-
-Frame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        mousePos = input.Position
-        framePos = Frame.Position
-        
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
-end)
-
-Frame.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
-        dragInput = input
-    end
-end)
-
-game:GetService("UserInputService").InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        local delta = input.Position - mousePos
-        Frame.Position = UDim2.new(
-            framePos.X.Scale,
-            framePos.X.Offset + delta.X,
-            framePos.Y.Scale,
-            framePos.Y.Offset + delta.Y
-        )
-    end
-end)
+-- Create a BodyGyro for rotation control (optional)
+local bodyGyro = Instance.new("BodyGyro")
+bodyGyro.MaxTorque = Vector3.new(0, 0, 0)
+bodyGyro.P = 3000
+bodyGyro.Parent = humanoidRootPart
 
 -- Jerk function
-local function doJerk()
-    if not jerkEnabled then return end
+local function startJerk()
+    isJerking = true
     
-    pcall(function()
-        local char = player.Character
-        if not char then return end
+    while isJerking do
+        -- Random offset for position
+        local randomX = math.random(-100, 100) / 100 * JERK_INTENSITY
+        local randomY = math.random(-100, 100) / 100 * JERK_INTENSITY
+        local randomZ = math.random(-100, 100) / 100 * JERK_INTENSITY
         
-        local root = char:FindFirstChild("HumanoidRootPart")
-        if not root then return end
+        -- Random rotation
+        local randomRotX = math.random(-30, 30)
+        local randomRotY = math.random(-30, 30)
+        local randomRotZ = math.random(-30, 30)
         
-        -- Random direction
-        local randomX = (math.random() - 0.5) * 2 * jerkIntensity
-        local randomZ = (math.random() - 0.5) * 2 * jerkIntensity
+        -- Create offset CFrame
+        local offsetCFrame = CFrame.new(randomX, randomY, randomZ)
+        local rotationCFrame = CFrame.Angles(
+            math.rad(randomRotX),
+            math.rad(randomRotY),
+            math.rad(randomRotZ)
+        )
         
-        -- Apply jerk movement
-        root.CFrame = root.CFrame + Vector3.new(randomX, 0, randomZ)
-    end)
+        -- Apply the jerk
+        local targetCFrame = humanoidRootPart.CFrame * offsetCFrame
+        
+        if JERK_ROTATIONS then
+            targetCFrame = targetCFrame * rotationCFrame
+        end
+        
+        -- Tween to create smooth jerk motion
+        local tweenInfo = TweenInfo.new(
+            JERK_SPEED,
+            Enum.EasingStyle.Quad,
+            Enum.EasingDirection.Out
+        )
+        
+        local tween = TweenService:Create(
+            humanoidRootPart,
+            tweenInfo,
+            {CFrame = targetCFrame}
+        )
+        
+        tween:Play()
+        tween.Completed:Wait()
+        
+        task.wait(0.01)
+    end
 end
 
--- Toggle button
-ToggleButton.MouseButton1Click:Connect(function()
-    jerkEnabled = not jerkEnabled
+local function stopJerk()
+    isJerking = false
+end
+
+-- Toggle jerk on key press (J key)
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
     
-    if jerkEnabled then
-        ToggleButton.Text = "ON"
-        ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
-        
-        -- Start jerking loop
-        task.spawn(function()
-            while jerkEnabled do
-                doJerk()
-                task.wait(jerkSpeed)
-            end
-        end)
-    else
-        ToggleButton.Text = "OFF"
-        ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    if input.KeyCode == Enum.KeyCode.J then
+        if not isJerking then
+            print("Jerk started! Press J again to stop.")
+            startJerk()
+        else
+            print("Jerk stopped!")
+            stopJerk()
+        end
     end
 end)
 
-print("[Jerk Tool] Loaded! Toggle the button to start jerking.")
+-- Cleanup
+character.Humanoid.Died:Connect(function()
+    stopJerk()
+end)
+
+print("Jerk Tool loaded! Press 'J' to toggle jerking animation.")
