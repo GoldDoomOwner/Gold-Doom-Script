@@ -3,16 +3,21 @@
 
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 
+-- Wait for PlayerGui to load
+local playerGui = player:WaitForChild("PlayerGui")
+
 -- Create ScreenGui
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "JerkToolUI"
 screenGui.ResetOnSpawn = false
-screenGui.Parent = player:WaitForChild("PlayerGui")
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = playerGui
 
 -- Create button
 local button = Instance.new("TextButton")
@@ -24,6 +29,8 @@ button.TextColor3 = Color3.fromRGB(255, 255, 255)
 button.TextSize = 24
 button.Font = Enum.Font.GothamBold
 button.BorderSizePixel = 0
+button.Active = true
+button.Draggable = false
 button.Parent = screenGui
 
 local buttonCorner = Instance.new("UICorner")
@@ -54,7 +61,7 @@ button.InputChanged:Connect(function(input)
     end
 end)
 
-game:GetService("UserInputService").InputChanged:Connect(function(input)
+UserInputService.InputChanged:Connect(function(input)
     if input == dragInput and dragging then
         local delta = input.Position - mousePos
         button.Position = UDim2.new(
@@ -72,14 +79,26 @@ local motor6D = nil
 
 -- Find the right shoulder motor
 local function findRightShoulder()
-    local torso = character:FindFirstChild("UpperTorso") or character:FindFirstChild("Torso")
+    -- For R6
+    local torso = character:FindFirstChild("Torso")
     if torso then
-        for _, child in pairs(torso:GetChildren()) do
-            if child:IsA("Motor6D") and (child.Name == "RightShoulder" or child.Name == "Right Shoulder") then
-                return child
-            end
+        local rightShoulder = torso:FindFirstChild("Right Shoulder")
+        if rightShoulder then
+            print("Found R6 Right Shoulder")
+            return rightShoulder
         end
     end
+    
+    -- For R15
+    local upperTorso = character:FindFirstChild("UpperTorso")
+    if upperTorso then
+        local rightShoulder = upperTorso:FindFirstChild("RightShoulder")
+        if rightShoulder then
+            print("Found R15 RightShoulder")
+            return rightShoulder
+        end
+    end
+    
     return nil
 end
 
@@ -92,6 +111,9 @@ local originalC0 = motor6D and motor6D.C0 or CFrame.new()
 local function doJerkMotion()
     if not motor6D then
         warn("Could not find right shoulder motor!")
+        button.Text = "Error: No Shoulder Found"
+        task.wait(2)
+        button.Text = "Jerk Off"
         return
     end
     
@@ -138,7 +160,7 @@ end
 -- Button click handler
 button.MouseButton1Click:Connect(function()
     if not isJerking then
-        spawn(doJerkMotion)
+        task.spawn(doJerkMotion)
     else
         isJerking = false
     end
@@ -161,7 +183,7 @@ end)
 player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
     humanoid = character:WaitForChild("Humanoid")
-    rightArm = character:WaitForChild("RightUpperArm") or character:WaitForChild("Right Arm")
+    task.wait(0.5) -- Wait for character to fully load
     motor6D = findRightShoulder()
     originalC0 = motor6D and motor6D.C0 or CFrame.new()
     isJerking = false
@@ -169,4 +191,5 @@ player.CharacterAdded:Connect(function(newCharacter)
     button.BackgroundColor3 = Color3.fromRGB(120, 70, 200)
 end)
 
-print("Jerk Tool loaded! Click the button to start.")
+print("Jerk Tool UI loaded successfully!")
+print("Button should be visible at bottom of screen")
