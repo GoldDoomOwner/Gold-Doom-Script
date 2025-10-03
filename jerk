@@ -1,0 +1,123 @@
+-- Jerk Tool Script
+-- Makes your character jerk/teleport in random directions
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+-- Configuration
+local jerkEnabled = false
+local jerkIntensity = 5 -- Distance of each jerk
+local jerkSpeed = 0.1 -- Time between jerks (lower = faster)
+
+-- Create GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "JerkToolGUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = player.PlayerGui
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 200, 0, 100)
+Frame.Position = UDim2.new(0.5, -100, 0.1, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Frame.BorderSizePixel = 2
+Frame.BorderColor3 = Color3.fromRGB(255, 255, 255)
+Frame.Parent = ScreenGui
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Text = "Jerk Tool"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.Parent = Frame
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0.8, 0, 0, 35)
+ToggleButton.Position = UDim2.new(0.1, 0, 0.45, 0)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.Text = "OFF"
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.TextSize = 14
+ToggleButton.Parent = Frame
+
+-- Dragging functionality
+local dragging = false
+local dragInput, mousePos, framePos
+
+Frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        mousePos = input.Position
+        framePos = Frame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+Frame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - mousePos
+        Frame.Position = UDim2.new(
+            framePos.X.Scale,
+            framePos.X.Offset + delta.X,
+            framePos.Y.Scale,
+            framePos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+-- Jerk function
+local function doJerk()
+    if not jerkEnabled then return end
+    
+    pcall(function()
+        local char = player.Character
+        if not char then return end
+        
+        local root = char:FindFirstChild("HumanoidRootPart")
+        if not root then return end
+        
+        -- Random direction
+        local randomX = (math.random() - 0.5) * 2 * jerkIntensity
+        local randomZ = (math.random() - 0.5) * 2 * jerkIntensity
+        
+        -- Apply jerk movement
+        root.CFrame = root.CFrame + Vector3.new(randomX, 0, randomZ)
+    end)
+end
+
+-- Toggle button
+ToggleButton.MouseButton1Click:Connect(function()
+    jerkEnabled = not jerkEnabled
+    
+    if jerkEnabled then
+        ToggleButton.Text = "ON"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+        
+        -- Start jerking loop
+        task.spawn(function()
+            while jerkEnabled do
+                doJerk()
+                task.wait(jerkSpeed)
+            end
+        end)
+    else
+        ToggleButton.Text = "OFF"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    end
+end)
+
+print("[Jerk Tool] Loaded! Toggle the button to start jerking.")
