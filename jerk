@@ -1,99 +1,141 @@
--- Jerk Animation Tool for Roblox
--- Place this in StarterPlayer > StarterCharacterScripts or ServerScriptService
+-- Jerk Off UI Tool for Roblox
+-- Place this in StarterGui as a LocalScript
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
--- Configuration
-local JERK_INTENSITY = 2.5 -- How intense the shake is
-local JERK_SPEED = 0.08 -- How fast each jerk happens (lower = faster)
-local JERK_ROTATIONS = true -- Enable rotation jerking
+-- Create ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "JerkToolUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
-local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+-- Create main frame
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 300, 0, 400)
+mainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
+mainFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
 
+-- Add rounded corners
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 12)
+corner.Parent = mainFrame
+
+-- Create character body (torso)
+local torso = Instance.new("Frame")
+torso.Size = UDim2.new(0, 100, 0, 120)
+torso.Position = UDim2.new(0.5, -50, 0.4, 0)
+torso.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+torso.BorderSizePixel = 0
+torso.Parent = mainFrame
+
+local torsoCorner = Instance.new("UICorner")
+torsoCorner.CornerRadius = UDim.new(0, 8)
+torsoCorner.Parent = torso
+
+-- Create head
+local head = Instance.new("Frame")
+head.Size = UDim2.new(0, 60, 0, 60)
+head.Position = UDim2.new(0.5, -30, -0.7, 0)
+head.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+head.BorderSizePixel = 0
+head.Parent = torso
+
+local headCorner = Instance.new("UICorner")
+headCorner.CornerRadius = UDim.new(1, 0)
+headCorner.Parent = head
+
+-- Create ARM (the important part!)
+local arm = Instance.new("Frame")
+arm.Size = UDim2.new(0, 30, 0, 80)
+arm.Position = UDim2.new(1, 5, 0.2, 0)
+arm.AnchorPoint = Vector2.new(0, 0)
+arm.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+arm.BorderSizePixel = 0
+arm.Parent = torso
+arm.ZIndex = 2
+
+local armCorner = Instance.new("UICorner")
+armCorner.CornerRadius = UDim.new(0, 8)
+armCorner.Parent = arm
+
+-- Create button
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 200, 0, 50)
+button.Position = UDim2.new(0.5, -100, 0.85, 0)
+button.BackgroundColor3 = Color3.fromRGB(120, 70, 200)
+button.Text = "Jerk Off"
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.TextSize = 20
+button.Font = Enum.Font.GothamBold
+button.BorderSizePixel = 0
+button.Parent = mainFrame
+
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 10)
+buttonCorner.Parent = button
+
+-- Animation variables
 local isJerking = false
-local originalCFrame = humanoidRootPart.CFrame
+local jerkSpeed = 0.15
+local jerkDistance = 50
 
--- Create a BodyGyro for rotation control (optional)
-local bodyGyro = Instance.new("BodyGyro")
-bodyGyro.MaxTorque = Vector3.new(0, 0, 0)
-bodyGyro.P = 3000
-bodyGyro.Parent = humanoidRootPart
-
--- Jerk function
-local function startJerk()
+-- Jerk animation function
+local function doJerkMotion()
     isJerking = true
+    button.Text = "Stop"
+    button.BackgroundColor3 = Color3.fromRGB(200, 70, 70)
     
     while isJerking do
-        -- Random offset for position
-        local randomX = math.random(-100, 100) / 100 * JERK_INTENSITY
-        local randomY = math.random(-100, 100) / 100 * JERK_INTENSITY
-        local randomZ = math.random(-100, 100) / 100 * JERK_INTENSITY
-        
-        -- Random rotation
-        local randomRotX = math.random(-30, 30)
-        local randomRotY = math.random(-30, 30)
-        local randomRotZ = math.random(-30, 30)
-        
-        -- Create offset CFrame
-        local offsetCFrame = CFrame.new(randomX, randomY, randomZ)
-        local rotationCFrame = CFrame.Angles(
-            math.rad(randomRotX),
-            math.rad(randomRotY),
-            math.rad(randomRotZ)
+        -- Down motion
+        local downTween = TweenService:Create(
+            arm,
+            TweenInfo.new(jerkSpeed, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+            {Position = UDim2.new(1, 5, 0.2 + jerkDistance/torso.AbsoluteSize.Y, 0)}
         )
+        downTween:Play()
+        downTween.Completed:Wait()
         
-        -- Apply the jerk
-        local targetCFrame = humanoidRootPart.CFrame * offsetCFrame
+        if not isJerking then break end
         
-        if JERK_ROTATIONS then
-            targetCFrame = targetCFrame * rotationCFrame
-        end
-        
-        -- Tween to create smooth jerk motion
-        local tweenInfo = TweenInfo.new(
-            JERK_SPEED,
-            Enum.EasingStyle.Quad,
-            Enum.EasingDirection.Out
+        -- Up motion (faster return)
+        local upTween = TweenService:Create(
+            arm,
+            TweenInfo.new(jerkSpeed * 0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {Position = UDim2.new(1, 5, 0.2, 0)}
         )
-        
-        local tween = TweenService:Create(
-            humanoidRootPart,
-            tweenInfo,
-            {CFrame = targetCFrame}
-        )
-        
-        tween:Play()
-        tween.Completed:Wait()
-        
-        task.wait(0.01)
+        upTween:Play()
+        upTween.Completed:Wait()
     end
-end
-
-local function stopJerk()
-    isJerking = false
-end
-
--- Toggle jerk on key press (J key)
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
     
-    if input.KeyCode == Enum.KeyCode.J then
-        if not isJerking then
-            print("Jerk started! Press J again to stop.")
-            startJerk()
-        else
-            print("Jerk stopped!")
-            stopJerk()
-        end
+    -- Reset position
+    arm.Position = UDim2.new(1, 5, 0.2, 0)
+    button.Text = "Jerk Off"
+    button.BackgroundColor3 = Color3.fromRGB(120, 70, 200)
+end
+
+-- Button click handler
+button.MouseButton1Click:Connect(function()
+    if not isJerking then
+        spawn(doJerkMotion)
+    else
+        isJerking = false
     end
 end)
 
--- Cleanup
-character.Humanoid.Died:Connect(function()
-    stopJerk()
+-- Add hover effect
+button.MouseEnter:Connect(function()
+    if not isJerking then
+        button.BackgroundColor3 = Color3.fromRGB(140, 90, 220)
+    end
 end)
 
-print("Jerk Tool loaded! Press 'J' to toggle jerking animation.")
+button.MouseLeave:Connect(function()
+    if not isJerking then
+        button.BackgroundColor3 = Color3.fromRGB(120, 70, 200)
+    end
+end)
+
+print("Jerk Tool UI loaded!")
