@@ -4,99 +4,106 @@ local Custom_PowerTools = {"Awaken", "Oblivious","Titanium", "Drug Abused", "Sou
 
 -- Tool creation functions
 local ToolCreators = {
-AkazaDash = function(localPlayer)
+AkazaDome = function(localPlayer)
 	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
 	local backpack = localPlayer.Backpack
 	
 	-- Check if already exists
-	local existing = backpack:FindFirstChild("AkazaDash") or character:FindFirstChild("AkazaDash")
+	local existing = backpack:FindFirstChild("AkazaDome") or character:FindFirstChild("AkazaDome")
 	if existing then return existing end
 	
-	local dashTool = Instance.new("Tool")
-	dashTool.Name = "Akaza Dash"
-	dashTool.RequiresHandle = false
+	local domeTool = Instance.new("Tool")
+	domeTool.Name = "Akaza Dome"
+	domeTool.RequiresHandle = false
 	
-	dashTool.Equipped:Connect(function()
+	domeTool.Equipped:Connect(function()
 		spawn(function()
 			local char = localPlayer.Character
 			if char and char:FindFirstChild("Humanoid") and char:FindFirstChild("HumanoidRootPart") then
 				local humanoid = char.Humanoid
 				local rootPart = char.HumanoidRootPart
 				
-				-- Disable controls temporarily
-				humanoid.AutoRotate = false
-				
-				-- Sound effect (punch/dash sound)
+				-- Sound effect
 				local sound = Instance.new("Sound")
-				sound.SoundId = "rbxassetid://4458055125" -- Punch/whoosh sound
-				sound.Volume = 0.7
+				sound.SoundId = "rbxassetid://5801216850" -- Impact/energy sound
+				sound.Volume = 0.8
 				sound.Parent = rootPart
 				sound:Play()
 				
-				-- Create speed boost effect
-				local bodyVelocity = Instance.new("BodyVelocity")
-				bodyVelocity.MaxForce = Vector3.new(math.huge, 0, math.huge)
-				bodyVelocity.Velocity = rootPart.CFrame.LookVector * 150 -- Fast forward dash
-				bodyVelocity.Parent = rootPart
+				-- Create dome
+				local dome = Instance.new("Part")
+				dome.Name = "AkazaDome"
+				dome.Shape = Enum.PartType.Ball
+				dome.Material = Enum.Material.ForceField
+				dome.Size = Vector3.new(20, 20, 20) -- Start small
+				dome.Anchored = true
+				dome.CanCollide = false
+				dome.Transparency = 0.3
+				dome.Color = Color3.fromRGB(255, 85, 127) -- Pink
+				dome.CFrame = rootPart.CFrame
+				dome.Parent = workspace
 				
-				-- Visual trail effect
-				local attachment0 = Instance.new("Attachment", rootPart)
-				local attachment1 = Instance.new("Attachment", rootPart)
-				attachment1.Position = Vector3.new(0, -2, 0)
+				-- Add glow effect
+				local pointLight = Instance.new("PointLight")
+				pointLight.Color = Color3.fromRGB(255, 85, 127)
+				pointLight.Brightness = 5
+				pointLight.Range = 30
+				pointLight.Parent = dome
 				
-				local trail = Instance.new("Trail")
-				trail.Attachment0 = attachment0
-				trail.Attachment1 = attachment1
-				trail.Color = ColorSequence.new({
-					ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 85, 127)), -- Pink
-					ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 170, 255))
-				})
-				trail.Transparency = NumberSequence.new({
-					NumberSequenceKeypoint.new(0, 0.5),
-					NumberSequenceKeypoint.new(1, 1)
-				})
-				trail.Lifetime = 0.5
-				trail.MinLength = 0
-				trail.Parent = rootPart
-				
-				-- Particle effect
+				-- Particle effects around dome
 				local particles = Instance.new("ParticleEmitter")
-				particles.Texture = "rbxasset://textures/particles/smoke_main.dds"
+				particles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
 				particles.Color = ColorSequence.new(Color3.fromRGB(255, 85, 127))
-				particles.Size = NumberSequence.new(0.5, 2)
+				particles.Size = NumberSequence.new(0.3, 0.6)
 				particles.Transparency = NumberSequence.new({
-					NumberSequenceKeypoint.new(0, 0.5),
+					NumberSequenceKeypoint.new(0, 0),
 					NumberSequenceKeypoint.new(1, 1)
 				})
-				particles.Lifetime = NumberRange.new(0.3, 0.5)
-				particles.Rate = 100
-				particles.Speed = NumberRange.new(5, 10)
-				particles.SpreadAngle = Vector2.new(30, 30)
-				particles.Parent = rootPart
+				particles.Lifetime = NumberRange.new(1, 1.5)
+				particles.Rate = 50
+				particles.Speed = NumberRange.new(3, 5)
+				particles.SpreadAngle = Vector2.new(180, 180)
+				particles.EmissionDirection = Enum.NormalId.Top
+				particles.Parent = dome
 				
-				-- Dash duration
-				wait(0.2)
+				-- Animate dome expansion
+				local targetSize = Vector3.new(30, 30, 30)
+				local duration = 0.3
+				local startTime = tick()
 				
-				-- Stop particles
-				particles.Enabled = false
-				bodyVelocity:Destroy()
+				while tick() - startTime < duration do
+					local alpha = (tick() - startTime) / duration
+					dome.Size = dome.Size:Lerp(targetSize, alpha)
+					dome.CFrame = rootPart.CFrame
+					task.wait()
+				end
+				
+				-- Keep dome active
+				wait(2)
+				
+				-- Fade out dome
+				local fadeTime = 0.5
+				startTime = tick()
+				
+				while tick() - startTime < fadeTime do
+					local alpha = (tick() - startTime) / fadeTime
+					dome.Transparency = 0.3 + (0.7 * alpha)
+					pointLight.Brightness = 5 * (1 - alpha)
+					dome.CFrame = rootPart.CFrame
+					task.wait()
+				end
 				
 				-- Cleanup
-				wait(0.5)
-				humanoid.AutoRotate = true
+				particles.Enabled = false
+				wait(1)
 				sound:Destroy()
-				trail:Destroy()
-				attachment0:Destroy()
-				attachment1:Destroy()
-				
-				wait(0.5)
-				particles:Destroy()
+				dome:Destroy()
 			end
 		end)
 	end)
 	
-	dashTool.Parent = backpack
-	return dashTool
+	domeTool.Parent = backpack
+	return domeTool
 end,
 
 	Awaken = function(localPlayer)
