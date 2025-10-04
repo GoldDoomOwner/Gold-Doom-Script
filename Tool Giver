@@ -19,124 +19,124 @@ AkazaDash = function(localPlayer)
 	domeTool.Equipped:Connect(function()
 		spawn(function()
 			local char = localPlayer.Character
-			if char and char:FindFirstChild("Humanoid") and char:FindFirstChild("HumanoidRootPart") then
-				local humanoid = char.Humanoid
-				local rootPart = char.HumanoidRootPart
+			if not char then return end
+			
+			local rootPart = char:FindFirstChild("HumanoidRootPart")
+			if not rootPart then return end
+			
+			-- Sound effect
+			local sound = Instance.new("Sound")
+			sound.SoundId = "rbxassetid://5801216850"
+			sound.Volume = 1
+			sound.Parent = rootPart
+			sound:Play()
+			
+			-- Create folder for compass lines
+			local compassFolder = Instance.new("Folder")
+			compassFolder.Name = "CompassDome"
+			compassFolder.Parent = workspace
+			
+			-- Create ground circle
+			local groundDecal = Instance.new("Part")
+			groundDecal.Name = "CompassGround"
+			groundDecal.Size = Vector3.new(40, 0.2, 40)
+			groundDecal.Shape = Enum.PartType.Cylinder
+			groundDecal.Anchored = true
+			groundDecal.CanCollide = false
+			groundDecal.Transparency = 0.7
+			groundDecal.Color = Color3.fromRGB(100, 200, 255)
+			groundDecal.Material = Enum.Material.Neon
+			groundDecal.CFrame = rootPart.CFrame * CFrame.new(0, -3, 0) * CFrame.Angles(0, 0, math.rad(90))
+			groundDecal.Parent = compassFolder
+			
+			-- Store lines with their initial angles
+			local compassLines = {}
+			local numLines = 12
+			
+			for i = 1, numLines do
+				local angle = (math.pi * 2 / numLines) * i
 				
-				-- Sound effect
-				local sound = Instance.new("Sound")
-				sound.SoundId = "rbxassetid://5801216850"
-				sound.Volume = 1
-				sound.Parent = rootPart
-				sound:Play()
+				local line = Instance.new("Part")
+				line.Name = "CompassLine"
+				line.Size = Vector3.new(0.5, 25, 30)
+				line.Anchored = true
+				line.CanCollide = false
+				line.Transparency = 0.3
+				line.Color = Color3.fromRGB(100, 200, 255)
+				line.Material = Enum.Material.Neon
+				line.Parent = compassFolder
 				
-				-- Create folder for compass lines
-				local compassFolder = Instance.new("Folder")
-				compassFolder.Name = "CompassDome"
-				compassFolder.Parent = workspace
-				
-				-- Create snowflake/compass pattern on ground
-				local groundDecal = Instance.new("Part")
-				groundDecal.Name = "CompassGround"
-				groundDecal.Size = Vector3.new(40, 0.1, 40)
-				groundDecal.Anchored = true
-				groundDecal.CanCollide = false
-				groundDecal.Transparency = 0.5
-				groundDecal.Color = Color3.fromRGB(100, 200, 255) -- Blue
-				groundDecal.Material = Enum.Material.Neon
-				groundDecal.CFrame = rootPart.CFrame * CFrame.new(0, -3, 0)
-				groundDecal.Parent = compassFolder
-				
-				-- Create multiple compass needle lines
-				local numLines = 12
-				for i = 1, numLines do
-					local angle = (math.pi * 2 / numLines) * i
-					
-					-- Main needle line
-					local line = Instance.new("Part")
-					line.Name = "CompassLine"
-					line.Size = Vector3.new(0.3, 20, 20) -- Tall vertical line
-					line.Anchored = true
-					line.CanCollide = false
-					line.Transparency = 0.2
-					line.Color = Color3.fromRGB(100, 200, 255)
-					line.Material = Enum.Material.Neon
-					
-					local distance = 15
-					local x = math.cos(angle) * distance
-					local z = math.sin(angle) * distance
-					
-					line.CFrame = CFrame.new(rootPart.Position + Vector3.new(x, 10, z)) * CFrame.Angles(0, 0, math.rad(90))
-					line.Parent = compassFolder
-					
-					-- Add glow
-					local pointLight = Instance.new("PointLight")
-					pointLight.Color = Color3.fromRGB(100, 200, 255)
-					pointLight.Brightness = 3
-					pointLight.Range = 15
-					pointLight.Parent = line
-				end
-				
-				-- Create energy particles
-				local particles = Instance.new("ParticleEmitter")
-				particles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
-				particles.Color = ColorSequence.new(Color3.fromRGB(100, 200, 255))
-				particles.Size = NumberSequence.new(0.5, 1)
-				particles.Transparency = NumberSequence.new({
-					NumberSequenceKeypoint.new(0, 0),
-					NumberSequenceKeypoint.new(1, 1)
-				})
-				particles.Lifetime = NumberRange.new(1, 2)
-				particles.Rate = 100
-				particles.Speed = NumberRange.new(5, 10)
-				particles.SpreadAngle = Vector2.new(180, 180)
-				particles.Parent = rootPart
-				
-				-- Rotate the compass slowly
-				local rotationSpeed = 20
-				local startTime = tick()
-				local duration = 5
-				
-				while tick() - startTime < duration do
-					local angle = (tick() - startTime) * rotationSpeed
-					for i, part in pairs(compassFolder:GetChildren()) do
-						if part:IsA("BasePart") and part.Name == "CompassLine" then
-							local baseAngle = (math.pi * 2 / numLines) * ((i - 2) % numLines)
-							local finalAngle = baseAngle + math.rad(angle)
-							local distance = 15
-							local x = math.cos(finalAngle) * distance
-							local z = math.sin(finalAngle) * distance
-							part.CFrame = CFrame.new(rootPart.Position + Vector3.new(x, 10, z)) * CFrame.Angles(0, 0, math.rad(90))
-						elseif part.Name == "CompassGround" then
-							part.CFrame = rootPart.CFrame * CFrame.new(0, -3, 0) * CFrame.Angles(0, math.rad(angle), 0)
-						end
-					end
-					task.wait()
-				end
-				
-				-- Fade out
-				particles.Enabled = false
-				for _, part in pairs(compassFolder:GetChildren()) do
-					if part:IsA("BasePart") then
-						spawn(function()
-							for i = 1, 10 do
-								part.Transparency = part.Transparency + 0.08
-								task.wait(0.05)
-							end
-						end)
-					end
-				end
-				
-				wait(0.5)
-				sound:Destroy()
-				compassFolder:Destroy()
+				table.insert(compassLines, {part = line, baseAngle = angle})
 			end
+			
+			-- Create particles
+			local particles = Instance.new("ParticleEmitter")
+			particles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+			particles.Color = ColorSequence.new(Color3.fromRGB(100, 200, 255))
+			particles.Size = NumberSequence.new(0.5, 1)
+			particles.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0),
+				NumberSequenceKeypoint.new(1, 1)
+			})
+			particles.Lifetime = NumberRange.new(1, 2)
+			particles.Rate = 50
+			particles.Speed = NumberRange.new(5, 10)
+			particles.Parent = rootPart
+			
+			-- Animation loop
+			local startTime = tick()
+			local duration = 5
+			local distance = 15
+			
+			while tick() - startTime < duration do
+				if not rootPart or not rootPart.Parent then break end
+				
+				local currentAngle = (tick() - startTime) * 50
+				
+				-- Update each line
+				for _, lineData in ipairs(compassLines) do
+					local finalAngle = lineData.baseAngle + math.rad(currentAngle)
+					local x = math.cos(finalAngle) * distance
+					local z = math.sin(finalAngle) * distance
+					
+					lineData.part.CFrame = CFrame.new(
+						rootPart.Position + Vector3.new(x, 10, z)
+					) * CFrame.Angles(0, 0, math.rad(90))
+				end
+				
+				-- Update ground
+				if groundDecal.Parent then
+					groundDecal.CFrame = rootPart.CFrame * CFrame.new(0, -3, 0) * CFrame.Angles(0, math.rad(currentAngle), math.rad(90))
+				end
+				
+				task.wait()
+			end
+			
+			-- Fade out
+			particles.Enabled = false
+			
+			for i = 1, 20 do
+				for _, lineData in ipairs(compassLines) do
+					if lineData.part and lineData.part.Parent then
+						lineData.part.Transparency = lineData.part.Transparency + 0.035
+					end
+				end
+				if groundDecal and groundDecal.Parent then
+					groundDecal.Transparency = groundDecal.Transparency + 0.015
+				end
+				task.wait(0.05)
+			end
+			
+			-- Cleanup
+			task.wait(0.5)
+			if sound then sound:Destroy() end
+			if compassFolder then compassFolder:Destroy() end
 		end)
 	end)
 	
 	domeTool.Parent = backpack
 	return domeTool
-end,
+end,,
 
 	Awaken = function(localPlayer)
 		local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
