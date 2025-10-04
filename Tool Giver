@@ -58,7 +58,7 @@ AkazaDash = function(localPlayer)
 				
 				local line = Instance.new("Part")
 				line.Name = "CompassLine"
-				line.Size = Vector3.new(0.5, 25, 30)
+				line.Size = Vector3.new(0.5, 25, 30) -- width, height, depth
 				line.Anchored = true
 				line.CanCollide = false
 				line.Transparency = 0.3
@@ -99,9 +99,13 @@ AkazaDash = function(localPlayer)
 					local x = math.cos(finalAngle) * distance
 					local z = math.sin(finalAngle) * distance
 					
-					lineData.part.CFrame = CFrame.new(
-						rootPart.Position + Vector3.new(x, 10, z)
-					) * CFrame.Angles(0, 0, math.rad(90))
+					-- Make the line face the center and stand vertically
+					local lookAtCenter = CFrame.new(
+						rootPart.Position + Vector3.new(x, 0, z),
+						rootPart.Position
+					)
+					
+					lineData.part.CFrame = lookAtCenter * CFrame.Angles(0, math.rad(90), 0)
 				end
 				
 				-- Update ground
