@@ -4,7 +4,7 @@ local Custom_PowerTools = {"Awaken", "Oblivious","Titanium", "Drug Abused", "Sou
 
 -- Tool creation functions
 local ToolCreators = {
-AkazaDome = function(localPlayer)
+AkazaDash = function(localPlayer)
 	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
 	local backpack = localPlayer.Backpack
 	
