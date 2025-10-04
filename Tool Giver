@@ -58,13 +58,20 @@ AkazaDash = function(localPlayer)
 				
 				local line = Instance.new("Part")
 				line.Name = "CompassLine"
-				line.Size = Vector3.new(0.5, 25, 30) -- width, height, depth
+				line.Size = Vector3.new(30, 0.3, 0.3) -- long needle: length, width, thickness
 				line.Anchored = true
 				line.CanCollide = false
 				line.Transparency = 0.3
 				line.Color = Color3.fromRGB(100, 200, 255)
 				line.Material = Enum.Material.Neon
 				line.Parent = compassFolder
+				
+				-- Add point light to each line
+				local pointLight = Instance.new("PointLight")
+				pointLight.Color = Color3.fromRGB(100, 200, 255)
+				pointLight.Brightness = 3
+				pointLight.Range = 15
+				pointLight.Parent = line
 				
 				table.insert(compassLines, {part = line, baseAngle = angle})
 			end
