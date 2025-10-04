@@ -136,7 +136,7 @@ AkazaDash = function(localPlayer)
 	
 	domeTool.Parent = backpack
 	return domeTool
-end,,
+end,
 
 	Awaken = function(localPlayer)
 		local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
