@@ -1,9 +1,104 @@
 local ToolModule = {}
 
-local Custom_PowerTools = {"Awaken", "Oblivious","Titanium", "Drug Abused", "Soul Monarch", "Creation"}
+local Custom_PowerTools = {"Awaken", "Oblivious","Titanium", "Drug Abused", "Soul Monarch", "Creation", "AkazaDash"}
 
 -- Tool creation functions
 local ToolCreators = {
+AkazaDash = function(localPlayer)
+	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+	local backpack = localPlayer.Backpack
+	
+	-- Check if already exists
+	local existing = backpack:FindFirstChild("AkazaDash") or character:FindFirstChild("AkazaDash")
+	if existing then return existing end
+	
+	local dashTool = Instance.new("Tool")
+	dashTool.Name = "Akaza Dash"
+	dashTool.RequiresHandle = false
+	
+	dashTool.Equipped:Connect(function()
+		spawn(function()
+			local char = localPlayer.Character
+			if char and char:FindFirstChild("Humanoid") and char:FindFirstChild("HumanoidRootPart") then
+				local humanoid = char.Humanoid
+				local rootPart = char.HumanoidRootPart
+				
+				-- Disable controls temporarily
+				humanoid.AutoRotate = false
+				
+				-- Sound effect (punch/dash sound)
+				local sound = Instance.new("Sound")
+				sound.SoundId = "rbxassetid://4458055125" -- Punch/whoosh sound
+				sound.Volume = 0.7
+				sound.Parent = rootPart
+				sound:Play()
+				
+				-- Create speed boost effect
+				local bodyVelocity = Instance.new("BodyVelocity")
+				bodyVelocity.MaxForce = Vector3.new(math.huge, 0, math.huge)
+				bodyVelocity.Velocity = rootPart.CFrame.LookVector * 150 -- Fast forward dash
+				bodyVelocity.Parent = rootPart
+				
+				-- Visual trail effect
+				local attachment0 = Instance.new("Attachment", rootPart)
+				local attachment1 = Instance.new("Attachment", rootPart)
+				attachment1.Position = Vector3.new(0, -2, 0)
+				
+				local trail = Instance.new("Trail")
+				trail.Attachment0 = attachment0
+				trail.Attachment1 = attachment1
+				trail.Color = ColorSequence.new({
+					ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 85, 127)), -- Pink
+					ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 170, 255))
+				})
+				trail.Transparency = NumberSequence.new({
+					NumberSequenceKeypoint.new(0, 0.5),
+					NumberSequenceKeypoint.new(1, 1)
+				})
+				trail.Lifetime = 0.5
+				trail.MinLength = 0
+				trail.Parent = rootPart
+				
+				-- Particle effect
+				local particles = Instance.new("ParticleEmitter")
+				particles.Texture = "rbxasset://textures/particles/smoke_main.dds"
+				particles.Color = ColorSequence.new(Color3.fromRGB(255, 85, 127))
+				particles.Size = NumberSequence.new(0.5, 2)
+				particles.Transparency = NumberSequence.new({
+					NumberSequenceKeypoint.new(0, 0.5),
+					NumberSequenceKeypoint.new(1, 1)
+				})
+				particles.Lifetime = NumberRange.new(0.3, 0.5)
+				particles.Rate = 100
+				particles.Speed = NumberRange.new(5, 10)
+				particles.SpreadAngle = Vector2.new(30, 30)
+				particles.Parent = rootPart
+				
+				-- Dash duration
+				wait(0.2)
+				
+				-- Stop particles
+				particles.Enabled = false
+				bodyVelocity:Destroy()
+				
+				-- Cleanup
+				wait(0.5)
+				humanoid.AutoRotate = true
+				sound:Destroy()
+				trail:Destroy()
+				attachment0:Destroy()
+				attachment1:Destroy()
+				
+				wait(0.5)
+				particles:Destroy()
+			end
+		end)
+	end)
+	
+	dashTool.Parent = backpack
+	return dashTool
+end,
+
 	Awaken = function(localPlayer)
 		local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
 		local backpack = localPlayer.Backpack
