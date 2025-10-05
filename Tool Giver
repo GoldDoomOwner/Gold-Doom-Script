@@ -4,6 +4,482 @@ local Custom_PowerTools = {"Awaken", "Oblivious","Titanium", "Drug Abused", "Sou
 
 -- Tool creation functions
 local ToolCreators = {
+
+["VOID WALKER"] = function(localPlayer)
+	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+	local backpack = localPlayer.Backpack
+	
+	local existing = backpack:FindFirstChild("VOID WALKER") or character:FindFirstChild("VOID WALKER")
+	if existing then return existing end
+	
+	local voidTool = Instance.new("Tool")
+	voidTool.Name = "VOID WALKER"
+	voidTool.RequiresHandle = false
+	
+	voidTool.Equipped:Connect(function()
+		spawn(function()
+			local char = localPlayer.Character
+			if not char then return end
+			
+			local humanoid = char:FindFirstChild("Humanoid")
+			local rootPart = char:FindFirstChild("HumanoidRootPart")
+			if not humanoid or not rootPart then return end
+			
+			-- Sound effect
+			local sound = Instance.new("Sound")
+			sound.SoundId = "rbxassetid://5841166593"
+			sound.Volume = 0.9
+			sound.Parent = rootPart
+			sound:Play()
+			
+			-- Become semi-transparent
+			for _, part in pairs(char:GetDescendants()) do
+				if part:IsA("BasePart") then
+					part.Transparency = 0.5
+				end
+			end
+			
+			-- Dark void aura
+			local voidAura = Instance.new("Part")
+			voidAura.Name = "VoidAura"
+			voidAura.Size = Vector3.new(12, 12, 12)
+			voidAura.Shape = Enum.PartType.Ball
+			voidAura.Transparency = 0.5
+			voidAura.Color = Color3.fromRGB(20, 0, 40)
+			voidAura.Material = Enum.Material.Neon
+			voidAura.CanCollide = false
+			voidAura.Anchored = true
+			voidAura.Parent = workspace
+			
+			-- Dark particles
+			local particles = Instance.new("ParticleEmitter")
+			particles.Texture = "rbxasset://textures/particles/smoke_main.dds"
+			particles.Color = ColorSequence.new(Color3.fromRGB(50, 0, 100))
+			particles.Size = NumberSequence.new(1, 2)
+			particles.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.3),
+				NumberSequenceKeypoint.new(1, 1)
+			})
+			particles.Lifetime = NumberRange.new(1, 2)
+			particles.Rate = 80
+			particles.Speed = NumberRange.new(2, 5)
+			particles.Parent = rootPart
+			
+			-- Create void portals
+			local portals = {}
+			for i = 1, 4 do
+				local portal = Instance.new("Part")
+				portal.Size = Vector3.new(6, 0.2, 6)
+				portal.Material = Enum.Material.Neon
+				portal.Color = Color3.fromRGB(100, 0, 200)
+				portal.Transparency = 0.3
+				portal.CanCollide = false
+				portal.Anchored = true
+				portal.Parent = workspace
+				table.insert(portals, portal)
+			end
+			
+			local effectActive = true
+			local portalAngle = 0
+			
+			-- Animate aura and portals
+			spawn(function()
+				while effectActive and char.Parent and rootPart.Parent do
+					voidAura.CFrame = rootPart.CFrame
+					
+					for i, portal in ipairs(portals) do
+						if portal and portal.Parent then
+							local offset = (i - 1) * (math.pi / 2)
+							local radius = 10
+							local x = math.cos(portalAngle + offset) * radius
+							local z = math.sin(portalAngle + offset) * radius
+							portal.CFrame = rootPart.CFrame * CFrame.new(x, -2, z) * CFrame.Angles(0, portalAngle * 2, 0)
+						end
+					end
+					
+					portalAngle = portalAngle + 0.05
+					task.wait()
+				end
+			end)
+			
+			-- Void suck - pull enemies in and damage
+			spawn(function()
+				while effectActive and char.Parent and rootPart.Parent do
+					for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+						if otherPlayer ~= localPlayer and otherPlayer.Character then
+							local otherRoot = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+							local otherHumanoid = otherPlayer.Character:FindFirstChild("Humanoid")
+							
+							if otherRoot and otherRoot.Parent and otherHumanoid then
+								local distance = (rootPart.Position - otherRoot.Position).Magnitude
+								if distance <= 20 and distance > 3 then
+									-- Pull towards void
+									local direction = (rootPart.Position - otherRoot.Position).Unit
+									local bodyVelocity = Instance.new("BodyVelocity")
+									bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+									bodyVelocity.Velocity = direction * 30
+									bodyVelocity.Parent = otherRoot
+									game:GetService("Debris"):AddItem(bodyVelocity, 0.1)
+								elseif distance <= 3 then
+									-- Damage when close
+									otherHumanoid:TakeDamage(5)
+								end
+							end
+						end
+					end
+					task.wait(0.2)
+				end
+			end)
+			
+			-- Duration
+			wait(10)
+			
+			effectActive = false
+			particles.Enabled = false
+			
+			-- Restore transparency
+			for _, part in pairs(char:GetDescendants()) do
+				if part:IsA("BasePart") then
+					part.Transparency = 0
+				end
+			end
+			
+			-- Cleanup
+			if voidAura then voidAura:Destroy() end
+			for _, portal in ipairs(portals) do
+				if portal then portal:Destroy() end
+			end
+			task.wait(1)
+			if sound then sound:Destroy() end
+		end)
+	end)
+	
+	voidTool.Parent = backpack
+	return voidTool
+end,
+
+["STORM BREAKER"] = function(localPlayer)
+	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+	local backpack = localPlayer.Backpack
+	
+	local existing = backpack:FindFirstChild("STORM BREAKER") or character:FindFirstChild("STORM BREAKER")
+	if existing then return existing end
+	
+	local stormTool = Instance.new("Tool")
+	stormTool.Name = "STORM BREAKER"
+	stormTool.RequiresHandle = false
+	
+	stormTool.Equipped:Connect(function()
+		spawn(function()
+			local char = localPlayer.Character
+			if not char then return end
+			
+			local humanoid = char:FindFirstChild("Humanoid")
+			local rootPart = char:FindFirstChild("HumanoidRootPart")
+			if not humanoid or not rootPart then return end
+			
+			-- Thunder sound
+			local sound = Instance.new("Sound")
+			sound.SoundId = "rbxassetid://6666016612"
+			sound.Volume = 1
+			sound.Parent = rootPart
+			sound:Play()
+			
+			-- Speed boost
+			local originalSpeed = humanoid.WalkSpeed
+			humanoid.WalkSpeed = 70
+			
+			-- Electric aura
+			local stormAura = Instance.new("Part")
+			stormAura.Name = "StormAura"
+			stormAura.Size = Vector3.new(16, 16, 16)
+			stormAura.Shape = Enum.PartType.Ball
+			stormAura.Transparency = 0.8
+			stormAura.Color = Color3.fromRGB(0, 200, 255)
+			stormAura.Material = Enum.Material.Neon
+			stormAura.CanCollide = false
+			stormAura.Anchored = true
+			stormAura.Parent = workspace
+			
+			-- Lightning particles
+			local particles = Instance.new("ParticleEmitter")
+			particles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+			particles.Color = ColorSequence.new(Color3.fromRGB(100, 200, 255))
+			particles.Size = NumberSequence.new(0.3, 1)
+			particles.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0),
+				NumberSequenceKeypoint.new(1, 1)
+			})
+			particles.Lifetime = NumberRange.new(0.3, 0.8)
+			particles.Rate = 200
+			particles.Speed = NumberRange.new(15, 25)
+			particles.Parent = rootPart
+			
+			-- Create lightning bolts
+			local bolts = {}
+			for i = 1, 6 do
+				local bolt = Instance.new("Part")
+				bolt.Size = Vector3.new(0.5, 20, 0.5)
+				bolt.Material = Enum.Material.Neon
+				bolt.Color = Color3.fromRGB(150, 230, 255)
+				bolt.CanCollide = false
+				bolt.Anchored = true
+				bolt.Parent = workspace
+				table.insert(bolts, bolt)
+			end
+			
+			local effectActive = true
+			local boltAngle = 0
+			
+			-- Animate aura and lightning
+			spawn(function()
+				while effectActive and char.Parent and rootPart.Parent do
+					stormAura.CFrame = rootPart.CFrame
+					
+					for i, bolt in ipairs(bolts) do
+						if bolt and bolt.Parent then
+							local offset = (i - 1) * (math.pi * 2 / 6)
+							local radius = 8
+							local x = math.cos(boltAngle + offset) * radius
+							local z = math.sin(boltAngle + offset) * radius
+							bolt.CFrame = rootPart.CFrame * CFrame.new(x, 10, z)
+							bolt.Transparency = 0.3 + math.abs(math.sin(tick() * 10)) * 0.5
+						end
+					end
+					
+					boltAngle = boltAngle + 0.1
+					task.wait()
+				end
+			end)
+			
+			-- Lightning strikes on enemies
+			spawn(function()
+				while effectActive and char.Parent and rootPart.Parent do
+					for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+						if otherPlayer ~= localPlayer and otherPlayer.Character then
+							local otherRoot = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+							local otherHumanoid = otherPlayer.Character:FindFirstChild("Humanoid")
+							
+							if otherRoot and otherRoot.Parent and otherHumanoid then
+								local distance = (rootPart.Position - otherRoot.Position).Magnitude
+								if distance <= 25 then
+									-- Damage
+									otherHumanoid:TakeDamage(6)
+									
+									-- Lightning strike visual
+									local strike = Instance.new("Part")
+									strike.Size = Vector3.new(1, 50, 1)
+									strike.Material = Enum.Material.Neon
+									strike.Color = Color3.fromRGB(200, 255, 255)
+									strike.Anchored = true
+									strike.CanCollide = false
+									strike.Position = otherRoot.Position + Vector3.new(0, 25, 0)
+									strike.Parent = workspace
+									
+									spawn(function()
+										for i = 1, 8 do
+											strike.Transparency = i / 8
+											task.wait(0.05)
+										end
+										strike:Destroy()
+									end)
+									
+									-- Stun effect
+									local bodyVelocity = Instance.new("BodyVelocity")
+									bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+									bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+									bodyVelocity.Parent = otherRoot
+									game:GetService("Debris"):AddItem(bodyVelocity, 0.5)
+								end
+							end
+						end
+					end
+					task.wait(1.5)
+				end
+			end)
+			
+			-- Duration
+			wait(10)
+			
+			effectActive = false
+			particles.Enabled = false
+			humanoid.WalkSpeed = originalSpeed
+			
+			-- Cleanup
+			if stormAura then stormAura:Destroy() end
+			for _, bolt in ipairs(bolts) do
+				if bolt then bolt:Destroy() end
+			end
+			task.wait(1)
+			if sound then sound:Destroy() end
+		end)
+	end)
+	
+	stormTool.Parent = backpack
+	return stormTool
+end,
+
+["CRIMSON REAPER"] = function(localPlayer)
+	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+	local backpack = localPlayer.Backpack
+	
+	local existing = backpack:FindFirstChild("CRIMSON REAPER") or character:FindFirstChild("CRIMSON REAPER")
+	if existing then return existing end
+	
+	local reaperTool = Instance.new("Tool")
+	reaperTool.Name = "CRIMSON REAPER"
+	reaperTool.RequiresHandle = false
+	
+	reaperTool.Equipped:Connect(function()
+		spawn(function()
+			local char = localPlayer.Character
+			if not char then return end
+			
+			local humanoid = char:FindFirstChild("Humanoid")
+			local rootPart = char:FindFirstChild("HumanoidRootPart")
+			if not humanoid or not rootPart then return end
+			
+			-- Dark sound effect
+			local sound = Instance.new("Sound")
+			sound.SoundId = "rbxassetid://7355143816"
+			sound.Volume = 0.8
+			sound.Parent = rootPart
+			sound:Play()
+			
+			-- Blood red aura
+			local reaperAura = Instance.new("Part")
+			reaperAura.Name = "ReaperAura"
+			reaperAura.Size = Vector3.new(14, 14, 14)
+			reaperAura.Shape = Enum.PartType.Ball
+			reaperAura.Transparency = 0.7
+			reaperAura.Color = Color3.fromRGB(150, 0, 0)
+			reaperAura.Material = Enum.Material.Neon
+			reaperAura.CanCollide = false
+			reaperAura.Anchored = true
+			reaperAura.Parent = workspace
+			
+			-- Red mist particles
+			local particles = Instance.new("ParticleEmitter")
+			particles.Texture = "rbxasset://textures/particles/smoke_main.dds"
+			particles.Color = ColorSequence.new(Color3.fromRGB(200, 0, 0))
+			particles.Size = NumberSequence.new(1.5, 3)
+			particles.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.5),
+				NumberSequenceKeypoint.new(1, 1)
+			})
+			particles.Lifetime = NumberRange.new(1, 2)
+			particles.Rate = 60
+			particles.Speed = NumberRange.new(3, 6)
+			particles.Parent = rootPart
+			
+			-- Create floating scythes
+			local scythes = {}
+			for i = 1, 8 do
+				local scythe = Instance.new("Part")
+				scythe.Size = Vector3.new(1, 6, 0.2)
+				scythe.Material = Enum.Material.Neon
+				scythe.Color = Color3.fromRGB(200, 0, 0)
+				scythe.CanCollide = false
+				scythe.Anchored = true
+				scythe.Parent = workspace
+				table.insert(scythes, scythe)
+			end
+			
+			local effectActive = true
+			local scytheAngle = 0
+			
+			-- Animate aura and scythes
+			spawn(function()
+				while effectActive and char.Parent and rootPart.Parent do
+					reaperAura.CFrame = rootPart.CFrame
+					reaperAura.Size = Vector3.new(14 + math.sin(tick() * 2) * 2, 14 + math.sin(tick() * 2) * 2, 14 + math.sin(tick() * 2) * 2)
+					
+					for i, scythe in ipairs(scythes) do
+						if scythe and scythe.Parent then
+							local offset = (i - 1) * (math.pi * 2 / 8)
+							local radius = 10
+							local x = math.cos(scytheAngle + offset) * radius
+							local z = math.sin(scytheAngle + offset) * radius
+							local y = math.sin(scytheAngle * 2 + i) * 3
+							scythe.CFrame = rootPart.CFrame * CFrame.new(x, y, z) * CFrame.Angles(scytheAngle * 3, scytheAngle * 2, 0)
+						end
+					end
+					
+					scytheAngle = scytheAngle + 0.07
+					task.wait()
+				end
+			end)
+			
+			-- Life drain and execute low HP targets
+			spawn(function()
+				while effectActive and char.Parent and rootPart.Parent do
+					for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+						if otherPlayer ~= localPlayer and otherPlayer.Character then
+							local otherRoot = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+							local otherHumanoid = otherPlayer.Character:FindFirstChild("Humanoid")
+							
+							if otherRoot and otherRoot.Parent and otherHumanoid and otherHumanoid.Health > 0 then
+								local distance = (rootPart.Position - otherRoot.Position).Magnitude
+								if distance <= 18 then
+									local damage = 4
+									
+									-- Execute if below 30% HP
+									if otherHumanoid.Health <= otherHumanoid.MaxHealth * 0.3 then
+										damage = 15
+										
+										-- Execute visual effect
+										local executeEffect = Instance.new("Part")
+										executeEffect.Size = Vector3.new(10, 10, 10)
+										executeEffect.Shape = Enum.PartType.Ball
+										executeEffect.Material = Enum.Material.Neon
+										executeEffect.Color = Color3.fromRGB(255, 0, 0)
+										executeEffect.Transparency = 0.3
+										executeEffect.Anchored = true
+										executeEffect.CanCollide = false
+										executeEffect.Position = otherRoot.Position
+										executeEffect.Parent = workspace
+										
+										spawn(function()
+											for i = 1, 10 do
+												executeEffect.Size = executeEffect.Size + Vector3.new(2, 2, 2)
+												executeEffect.Transparency = 0.3 + (i / 10) * 0.7
+												task.wait(0.05)
+											end
+											executeEffect:Destroy()
+										end)
+									end
+									
+									otherHumanoid:TakeDamage(damage)
+									
+									-- Heal self
+									humanoid.Health = math.min(humanoid.Health + damage, humanoid.MaxHealth)
+								end
+							end
+						end
+					end
+					task.wait(0.8)
+				end
+			end)
+			
+			-- Duration
+			wait(12)
+			
+			effectActive = false
+			particles.Enabled = false
+			
+			-- Cleanup
+			if reaperAura then reaperAura:Destroy() end
+			for _, scythe in ipairs(scythes) do
+				if scythe then scythe:Destroy() end
+			end
+			task.wait(1)
+			if sound then sound:Destroy() end
+		end)
+	end)
+	
+	reaperTool.Parent = backpack
+	return reaperTool
+end,
 ["ESPER RAGE"] = function(localPlayer)
 	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
 	local backpack = localPlayer.Backpack
