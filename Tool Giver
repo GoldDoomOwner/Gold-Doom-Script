@@ -1,6 +1,6 @@
 local ToolModule = {}
 
-local Custom_PowerTools = {"Awaken", "Oblivious","Titanium", "Drug Abused", "Soul Monarch", "Creation", "AkazaDash", "ESPER RAGE", "GOLDEN MONARCH"}
+local Custom_PowerTools = {"Awaken", "Oblivious","Titanium", "Drug Abused", "Soul Monarch", "Creation", "AkazaDash", "ESPER RAGE", "GOLDEN MONARCH", "VOID WALKER", "STORM BREAKER", "CRIMSON REAPER"}
 
 -- Tool creation functions
 local ToolCreators = {
