@@ -3869,46 +3869,22 @@ end,
 		soulTool.Parent = backpack
 		return soulTool
 	end,
-	
-	-- Add more tool creators here as needed
-	-- ToolName = function(localPlayer) ... end,
 }
 
--- Check if a tool name is valid
-function ToolModule:IsValidTool(toolName)
-	return table.find(Custom_PowerTools, toolName) ~= nil
+-- Add function to create tools
+function ToolModule.CreateTool(toolName, player)
+	if ToolCreators[toolName] then
+		return ToolCreators[toolName](player)
+	else
+		warn("Tool creator not found for: " .. toolName)
+		return nil
+	end
 end
 
--- Get list of available tools
-function ToolModule:GetAvailableTools()
+-- Add function to get all available tools
+function ToolModule.GetAvailableTools()
 	return Custom_PowerTools
 end
 
-function ToolModule:GetTools(...)
-	local toolNames = {...}
-	local player = game.Players.LocalPlayer
-	local foundTools = {}
-	
-	for _, toolName in ipairs(toolNames) do
-		-- First check if it's in the valid tools list
-		if not self:IsValidTool(toolName) then
-			warn("Tool not in Custom_PowerTools list: " .. tostring(toolName))
-			continue
-		end
-		
-		-- Check if we have a creator for this tool
-		if ToolCreators[toolName] then
-			-- Create or get the tool
-			local tool = ToolCreators[toolName](player)
-			if tool then
-				table.insert(foundTools, tool)
-			end
-		else
-			warn("No creator implemented for tool: " .. tostring(toolName) .. " (add it to ToolCreators)")
-		end
-	end
-	
-	return foundTools
-end
-
+-- THIS IS THE FIX: Return the module so loadstring() doesn't return nil
 return ToolModule
