@@ -4,6 +4,1415 @@ local Custom_PowerTools = {"Awaken", "Oblivious","Titanium", "Drug Abused", "Sou
 
 -- Tool creation functions
 local ToolCreators = {
+["DRAGON SPIRIT"] = function(localPlayer)
+	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+	local backpack = localPlayer.Backpack
+	
+	local existing = backpack:FindFirstChild("DRAGON SPIRIT") or character:FindFirstChild("DRAGON SPIRIT")
+	if existing then return existing end
+	
+	local dragonTool = Instance.new("Tool")
+	dragonTool.Name = "DRAGON SPIRIT"
+	dragonTool.RequiresHandle = false
+	
+	dragonTool.Equipped:Connect(function()
+		spawn(function()
+			local char = localPlayer.Character
+			if not char then return end
+			
+			local humanoid = char:FindFirstChild("Humanoid")
+			local rootPart = char:FindFirstChild("HumanoidRootPart")
+			if not humanoid or not rootPart then return end
+			
+			local sound = Instance.new("Sound")
+			sound.SoundId = "rbxassetid://6026984224"
+			sound.Volume = 1
+			sound.Parent = rootPart
+			sound:Play()
+			
+			-- Speed boost
+			local originalSpeed = humanoid.WalkSpeed
+			humanoid.WalkSpeed = 75
+			
+			-- Dragon aura
+			local dragonAura = Instance.new("Part")
+			dragonAura.Name = "DragonAura"
+			dragonAura.Size = Vector3.new(17, 17, 17)
+			dragonAura.Shape = Enum.PartType.Ball
+			dragonAura.Transparency = 0.75
+			dragonAura.Color = Color3.fromRGB(255, 50, 0)
+			dragonAura.Material = Enum.Material.Neon
+			dragonAura.CanCollide = false
+			dragonAura.Anchored = true
+			dragonAura.Parent = workspace
+			
+			local fire = Instance.new("Fire")
+			fire.Size = 12
+			fire.Heat = 20
+			fire.Parent = rootPart
+			
+			local particles = Instance.new("ParticleEmitter")
+			particles.Texture = "rbxasset://textures/particles/smoke_main.dds"
+			particles.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 100, 0)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
+			})
+			particles.Size = NumberSequence.new(2, 3.5)
+			particles.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.4),
+				NumberSequenceKeypoint.new(1, 1)
+			})
+			particles.Lifetime = NumberRange.new(1, 2)
+			particles.Rate = 90
+			particles.Speed = NumberRange.new(8, 15)
+			particles.Parent = rootPart
+			
+			-- Dragon wings
+			local wings = {}
+			for side = -1, 1, 2 do
+				for i = 1, 2 do
+					local wing = Instance.new("Part")
+					wing.Size = Vector3.new(0.5, 6, 4)
+					wing.Material = Enum.Material.Neon
+					wing.Color = Color3.fromRGB(255, 50, 0)
+					wing.Transparency = 0.5
+					wing.CanCollide = false
+					wing.Anchored = true
+					wing.Parent = workspace
+					table.insert(wings, {part = wing, side = side, index = i})
+				end
+			end
+			
+			local effectActive = true
+			local wingAngle = 0
+			
+			spawn(function()
+				while effectActive and char.Parent and rootPart.Parent do
+					dragonAura.CFrame = rootPart.CFrame
+					
+					for _, wingData in ipairs(wings) do
+						if wingData.part and wingData.part.Parent then
+							local flapOffset = math.sin(wingAngle * 4) * 0.5
+							local xOffset = wingData.side * (4 + wingData.index)
+							local zOffset = -wingData.index + flapOffset
+							
+							wingData.part.CFrame = rootPart.CFrame 
+								* CFrame.new(xOffset, 1, zOffset)
+								* CFrame.Angles(0, math.rad(wingData.side * 30), math.rad(wingData.side * (40 + flapOffset * 30)))
+						end
+					end
+					
+					wingAngle = wingAngle + 0.12
+					task.wait()
+				end
+			end)
+			
+			-- Dragon breath attack
+			spawn(function()
+				while effectActive and char.Parent and rootPart.Parent do
+					for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+						if otherPlayer ~= localPlayer and otherPlayer.Character then
+							local otherRoot = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+							local otherHumanoid = otherPlayer.Character:FindFirstChild("Humanoid")
+							
+							if otherRoot and otherRoot.Parent and otherHumanoid then
+								local distance = (rootPart.Position - otherRoot.Position).Magnitude
+								if distance <= 24 then
+									otherHumanoid:TakeDamage(8)
+									
+									-- Fire breath effect
+									local breath = Instance.new("Part")
+									breath.Size = Vector3.new(4, 4, distance)
+									breath.Material = Enum.Material.Neon
+									breath.Color = Color3.fromRGB(255, 100, 0)
+									breath.Transparency = 0.5
+									breath.Anchored = true
+									breath.CanCollide = false
+									breath.CFrame = CFrame.new(rootPart.Position, otherRoot.Position) * CFrame.new(0, 0, -distance / 2)
+									breath.Parent = workspace
+									
+									local breathFire = Instance.new("Fire")
+									breathFire.Size = 8
+									breathFire.Parent = breath
+									
+									spawn(function()
+										for i = 1, 10 do
+											breath.Transparency = 0.5 + (i / 10) * 0.5
+											task.wait(0.05)
+										end
+										breath:Destroy()
+									end)
+								end
+							end
+						end
+					end
+					task.wait(1.5)
+				end
+			end)
+			
+			wait(11)
+			effectActive = false
+			fire.Enabled = false
+			particles.Enabled = false
+			humanoid.WalkSpeed = originalSpeed
+			
+			if dragonAura then dragonAura:Destroy() end
+			for _, wingData in ipairs(wings) do
+				if wingData.part then wingData.part:Destroy() end
+			end
+			task.wait(1)
+			if fire then fire:Destroy() end
+			if sound then sound:Destroy() end
+		end)
+	end)
+	
+	dragonTool.Parent = backpack
+	return dragonTool
+end,
+
+["NEBULA VOID"] = function(localPlayer)
+	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+	local backpack = localPlayer.Backpack
+	
+	local existing = backpack:FindFirstChild("NEBULA VOID") or character:FindFirstChild("NEBULA VOID")
+	if existing then return existing end
+	
+	local nebulaTool = Instance.new("Tool")
+	nebulaTool.Name = "NEBULA VOID"
+	nebulaTool.RequiresHandle = false
+	
+	nebulaTool.Equipped:Connect(function()
+		spawn(function()
+			local char = localPlayer.Character
+			if not char then return end
+			
+			local humanoid = char:FindFirstChild("Humanoid")
+			local rootPart = char:FindFirstChild("HumanoidRootPart")
+			if not humanoid or not rootPart then return end
+			
+			local sound = Instance.new("Sound")
+			sound.SoundId = "rbxassetid://5851988181"
+			sound.Volume = 0.9
+			sound.Parent = rootPart
+			sound:Play()
+			
+			-- Nebula aura
+			local nebulaAura = Instance.new("Part")
+			nebulaAura.Name = "NebulaAura"
+			nebulaAura.Size = Vector3.new(22, 22, 22)
+			nebulaAura.Shape = Enum.PartType.Ball
+			nebulaAura.Transparency = 0.7
+			nebulaAura.Color = Color3.fromRGB(100, 50, 150)
+			nebulaAura.Material = Enum.Material.Neon
+			nebulaAura.CanCollide = false
+			nebulaAura.Anchored = true
+			nebulaAura.Parent = workspace
+			
+			local particles = Instance.new("ParticleEmitter")
+			particles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+			particles.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Color3.fromRGB(100, 50, 150)),
+				ColorSequenceKeypoint.new(0.5, Color3.fromRGB(50, 100, 200)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 50, 200))
+			})
+			particles.Size = NumberSequence.new(1, 2)
+			particles.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.3),
+				NumberSequenceKeypoint.new(1, 1)
+			})
+			particles.Lifetime = NumberRange.new(2, 3)
+			particles.Rate = 80
+			particles.Speed = NumberRange.new(4, 8)
+			particles.Parent = rootPart
+			
+			-- Stars
+			local stars = {}
+			for i = 1, 15 do
+				local star = Instance.new("Part")
+				star.Size = Vector3.new(0.5, 0.5, 0.5)
+				star.Shape = Enum.PartType.Ball
+				star.Material = Enum.Material.Neon
+				star.Color = Color3.fromRGB(255, 255, 255)
+				star.Transparency = 0.2
+				star.CanCollide = false
+				star.Anchored = true
+				star.Parent = workspace
+				
+				local starLight = Instance.new("PointLight")
+				starLight.Color = Color3.fromRGB(200, 200, 255)
+				starLight.Brightness = 3
+				starLight.Range = 10
+				starLight.Parent = star
+				
+				table.insert(stars, star)
+			end
+			
+			local effectActive = true
+			local starAngle = 0
+			
+			spawn(function()
+				while effectActive and char.Parent and rootPart.Parent do
+					nebulaAura.CFrame = rootPart.CFrame
+					
+					for i, star in ipairs(stars) do
+						if star and star.Parent then
+							local offset = (i - 1) * (math.pi * 2 / 15)
+							local radius = 12 + math.sin(starAngle + i) * 4
+							local x = math.cos(starAngle * 1.5 + offset) * radius
+							local z = math.sin(starAngle * 1.5 + offset) * radius
+							local y = math.sin(starAngle * 2 + i) * 6
+							star.CFrame = rootPart.CFrame * CFrame.new(x, y, z)
+						end
+					end
+					
+					starAngle = starAngle + 0.04
+					task.wait()
+				end
+			end)
+			
+			-- Cosmic damage
+			spawn(function()
+				while effectActive and char.Parent and rootPart.Parent do
+					for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+						if otherPlayer ~= localPlayer and otherPlayer.Character then
+							local otherRoot = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+							local otherHumanoid = otherPlayer.Character:FindFirstChild("Humanoid")
+							
+							if otherRoot and otherRoot.Parent and otherHumanoid then
+								local distance = (rootPart.Position - otherRoot.Position).Magnitude
+								if distance <= 25 then
+									otherHumanoid:TakeDamage(5)
+									
+									-- Cosmic explosion
+									local explosion = Instance.new("Part")
+									explosion.Size = Vector3.new(6, 6, 6)
+									explosion.Shape = Enum.PartType.Ball
+									explosion.Material = Enum.Material.Neon
+									explosion.Color = Color3.fromRGB(100, 50, 200)
+									explosion.Transparency = 0.4
+									explosion.Anchored = true
+									explosion.CanCollide = false
+									explosion.Position = otherRoot.Position
+									explosion.Parent = workspace
+									
+									spawn(function()
+										for i = 1, 12 do
+											explosion.Size = explosion.Size + Vector3.new(1, 1, 1)
+											explosion.Transparency = 0.4 + (i / 12) * 0.6
+											task.wait(0.04)
+										end
+										explosion:Destroy()
+									end)
+								end
+							end
+						end
+					end
+					task.wait(1.3)
+				end
+			end)
+			
+			wait(12)
+			effectActive = false
+			particles.Enabled = false
+			
+			if nebulaAura then nebulaAura:Destroy() end
+			for _, star in ipairs(stars) do
+				if star then star:Destroy() end
+			end
+			task.wait(1)
+			if sound then sound:Destroy() end
+		end)
+	end)
+	
+	nebulaTool.Parent = backpack
+	return nebulaTool
+end,
+
+["EARTH SHAKER"] = function(localPlayer)
+	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+	local backpack = localPlayer.Backpack
+	
+	local existing = backpack:FindFirstChild("EARTH SHAKER") or character:FindFirstChild("EARTH SHAKER")
+	if existing then return existing end
+	
+	local earthTool = Instance.new("Tool")
+	earthTool.Name = "EARTH SHAKER"
+	earthTool.RequiresHandle = false
+	
+	earthTool.Equipped:Connect(function()
+		spawn(function()
+			local char = localPlayer.Character
+			if not char then return end
+			
+			local humanoid = char:FindFirstChild("Humanoid")
+			local rootPart = char:FindFirstChild("HumanoidRootPart")
+			if not humanoid or not rootPart then return end
+			
+			local sound = Instance.new("Sound")
+			sound.SoundId = "rbxassetid://5801216850"
+			sound.Volume = 1
+			sound.Parent = rootPart
+			sound:Play()
+			
+			-- Earth aura
+			local earthAura = Instance.new("Part")
+			earthAura.Name = "EarthAura"
+			earthAura.Size = Vector3.new(20, 20, 20)
+			earthAura.Shape = Enum.PartType.Ball
+			earthAura.Transparency = 0.8
+			earthAura.Color = Color3.fromRGB(139, 90, 43)
+			earthAura.Material = Enum.Material.Neon
+			earthAura.CanCollide = false
+			earthAura.Anchored = true
+			earthAura.Parent = workspace
+			
+			local particles = Instance.new("ParticleEmitter")
+			particles.Texture = "rbxasset://textures/particles/smoke_main.dds"
+			particles.Color = ColorSequence.new(Color3.fromRGB(139, 90, 43))
+			particles.Size = NumberSequence.new(2, 3)
+			particles.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.5),
+				NumberSequenceKeypoint.new(1, 1)
+			})
+			particles.Lifetime = NumberRange.new(1.5, 2.5)
+			particles.Rate = 60
+			particles.Speed = NumberRange.new(3, 6)
+			particles.Parent = rootPart
+			
+			-- Floating boulders
+			local boulders = {}
+			for i = 1, 8 do
+				local boulder = Instance.new("Part")
+				boulder.Size = Vector3.new(4, 4, 4)
+				boulder.Material = Enum.Material.Rock
+				boulder.Color = Color3.fromRGB(100, 80, 60)
+				boulder.CanCollide = false
+				boulder.Anchored = true
+				boulder.Parent = workspace
+				table.insert(boulders, boulder)
+			end
+			
+			local effectActive = true
+			local boulderAngle = 0
+			
+			spawn(function()
+				while effectActive and char.Parent and rootPart.Parent do
+					earthAura.CFrame = rootPart.CFrame
+					
+					for i, boulder in ipairs(boulders) do
+						if boulder and boulder.Parent then
+							local offset = (i - 1) * (math.pi * 2 / 8)
+							local radius = 11
+							local x = math.cos(boulderAngle + offset) * radius
+							local z = math.sin(boulderAngle + offset) * radius
+							local y = 2 + math.sin(boulderAngle * 2 + i) * 2
+							boulder.CFrame = rootPart.CFrame * CFrame.new(x, y, z) * CFrame.Angles(boulderAngle, boulderAngle * 1.5, boulderAngle * 2)
+						end
+					end
+					
+					boulderAngle = boulderAngle + 0.06
+					task.wait()
+				end
+			end)
+			
+			-- Ground slam attacks
+			spawn(function()
+				while effectActive and char.Parent and rootPart.Parent do
+					for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+						if otherPlayer ~= localPlayer and otherPlayer.Character then
+							local otherRoot = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+							local otherHumanoid = otherPlayer.Character:FindFirstChild("Humanoid")
+							
+							if otherRoot and otherRoot.Parent and otherHumanoid then
+								local distance = (rootPart.Position - otherRoot.Position).Magnitude
+								if distance <= 23 then
+									otherHumanoid:TakeDamage(7)
+									
+									-- Shockwave
+									local shockwave = Instance.new("Part")
+									shockwave.Size = Vector3.new(10, 0.5, 10)
+									shockwave.Material = Enum.Material.Neon
+									shockwave.Color = Color3.fromRGB(139, 90, 43)
+									shockwave.Transparency = 0.5
+									shockwave.Anchored = true
+									shockwave.CanCollide = false
+									shockwave.Position = otherRoot.Position + Vector3.new(0, -2, 0)
+									shockwave.Parent = workspace
+									
+									spawn(function()
+										for i = 1, 15 do
+											shockwave.Size = shockwave.Size + Vector3.new(3, 0, 3)
+											shockwave.Transparency = 0.5 + (i / 15) * 0.5
+											task.wait(0.03)
+										end
+										shockwave:Destroy()
+									end)
+									
+									-- Knockup
+									local bodyVelocity = Instance.new("BodyVelocity")
+									bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+									bodyVelocity.Velocity = Vector3.new(0, 50, 0)
+									bodyVelocity.Parent = otherRoot
+									game:GetService("Debris"):AddItem(bodyVelocity, 0.3)
+								end
+							end
+						end
+					end
+					task.wait(1.5)
+				end
+			end)
+			
+			wait(11)
+			effectActive = false
+			particles.Enabled = false
+			
+			if earthAura then earthAura:Destroy() end
+			for _, boulder in ipairs(boulders) do
+				if boulder then boulder:Destroy() end
+			end
+			task.wait(1)
+			if sound then sound:Destroy() end
+		end)
+	end)
+	
+	earthTool.Parent = backpack
+	return earthTool
+end,
+
+["WIND DANCER"] = function(localPlayer)
+	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+	local backpack = localPlayer.Backpack
+	
+	local existing = backpack:FindFirstChild("WIND DANCER") or character:FindFirstChild("WIND DANCER")
+	if existing then return existing end
+	
+	local windTool = Instance.new("Tool")
+	windTool.Name = "WIND DANCER"
+	windTool.RequiresHandle = false
+	
+	windTool.Equipped:Connect(function()
+		spawn(function()
+			local char = localPlayer.Character
+			if not char then return end
+			
+			local humanoid = char:FindFirstChild("Humanoid")
+			local rootPart = char:FindFirstChild("HumanoidRootPart")
+			if not humanoid or not rootPart then return end
+			
+			local sound = Instance.new("Sound")
+			sound.SoundId = "rbxassetid://5842165599"
+			sound.Volume = 0.8
+			sound.Parent = rootPart
+			sound:Play()
+			
+			-- Extreme speed boost
+			local originalSpeed = humanoid.WalkSpeed
+			humanoid.WalkSpeed = 110
+			
+			-- Wind aura
+			local windAura = Instance.new("Part")
+			windAura.Name = "WindAura"
+			windAura.Size = Vector3.new(15, 15, 15)
+			windAura.Shape = Enum.PartType.Ball
+			windAura.Transparency = 0.9
+			windAura.Color = Color3.fromRGB(200, 255, 200)
+			windAura.Material = Enum.Material.Neon
+			windAura.CanCollide = false
+			windAura.Anchored = true
+			windAura.Parent = workspace
+			
+			local particles = Instance.new("ParticleEmitter")
+			particles.Texture = "rbxasset://textures/particles/smoke_main.dds"
+			particles.Color = ColorSequence.new(Color3.fromRGB(200, 255, 200))
+			particles.Size = NumberSequence.new(1.5, 2.5)
+			particles.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.6),
+				NumberSequenceKeypoint.new(1, 1)
+			})
+			particles.Lifetime = NumberRange.new(0.5, 1)
+			particles.Rate = 150
+			particles.Speed = NumberRange.new(20, 35)
+			particles.Parent = rootPart
+			
+			-- Wind trails
+			local trails = {}
+			for i = 1, 6 do
+				local trail = Instance.new("Part")
+				trail.Size = Vector3.new(0.4, 15, 0.4)
+				trail.Material = Enum.Material.Neon
+				trail.Color = Color3.fromRGB(200, 255, 200)
+				trail.Transparency = 0.5
+				trail.CanCollide = false
+				trail.Anchored = true
+				trail.Parent = workspace
+				table.insert(trails, trail)
+			end
+			
+			local effectActive = true
+			local trailAngle = 0
+			
+			spawn(function()
+				while effectActive and char.Parent and rootPart.Parent do
+					windAura.CFrame = rootPart.CFrame
+					
+					for i, trail in ipairs(trails) do
+						if trail and trail.Parent then
+							local offset = (i - 1) * (math.pi * 2 / 6)
+							local radius = 8
+							local x = math.cos(trailAngle * 3 + offset) * radius
+							local z = math.sin(trailAngle * 3 + offset) * radius
+							trail.CFrame = rootPart.CFrame * CFrame.new(x, 0, z) * CFrame.Angles(math.rad(15), trailAngle + offset, 0)
+						end
+					end
+					
+					trailAngle = trailAngle + 0.15
+					task.wait()
+				end
+			end)
+			
+			-- Wind slice attacks
+			spawn(function()
+				while effectActive and char.Parent and rootPart.Parent do
+					for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+						if otherPlayer ~= localPlayer and otherPlayer.Character then
+							local otherRoot = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+							local otherHumanoid = otherPlayer.Character:FindFirstChild("Humanoid")
+							
+							if otherRoot and otherRoot.Parent and otherHumanoid then
+								local distance = (rootPart.Position - otherRoot.Position).Magnitude
+								if distance <= 18 then
+									otherHumanoid:TakeDamage(5)
+									
+									-- Wind slash
+									local slash = Instance.new("Part")
+									slash.Size = Vector3.new(8, 0.3, 0.3)
+									slash.Material = Enum.Material.Neon
+									slash.Color = Color3.fromRGB(200, 255, 200)
+									slash.Transparency = 0.3
+									slash.Anchored = true
+									slash.CanCollide = false
+									slash.CFrame = otherRoot.CFrame * CFrame.Angles(0, math.rad(45), 0)
+									slash.Parent = workspace
+									
+									spawn(function()
+										for i = 1, 10 do
+											slash.Transparency = 0.3 + (i / 10) * 0.7
+											slash.Size = slash.Size + Vector3.new(1, 0, 0)
+											task.wait(0.03)
+										end
+										slash:Destroy()
+									end)
+									
+									-- Knockback
+									local direction = (otherRoot.Position - rootPart.Position).Unit
+									local bodyVelocity = Instance.new("BodyVelocity")
+									bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+									bodyVelocity.Velocity = direction * 70
+									bodyVelocity.Parent = otherRoot
+									game:GetService("Debris"):AddItem(bodyVelocity, 0.2)
+								end
+							end
+						end
+					end
+					task.wait(0.6)
+				end
+			end)
+			
+			wait(9)
+			effectActive = false
+			particles.Enabled = false
+			humanoid.WalkSpeed = originalSpeed
+			
+			if windAura then windAura:Destroy() end
+			for _, trail in ipairs(trails) do
+				if trail then trail:Destroy() end
+			end
+			task.wait(1)
+			if sound then sound:Destroy() end
+		end)
+	end)
+	
+	windTool.Parent = backpack
+	return windTool
+end,
+
+["CHAOS BREAKER"] = function(localPlayer)
+	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+	local backpack = localPlayer.Backpack
+	
+	local existing = backpack:FindFirstChild("CHAOS BREAKER") or character:FindFirstChild("CHAOS BREAKER")
+	if existing then return existing end
+	
+	local chaosTool = Instance.new("Tool")
+	chaosTool.Name = "CHAOS BREAKER"
+	chaosTool.RequiresHandle = false
+	
+	chaosTool.Equipped:Connect(function()
+		spawn(function()
+			local char = localPlayer.Character
+			if not char then return end
+			
+			local humanoid = char:FindFirstChild("Humanoid")
+			local rootPart = char:FindFirstChild("HumanoidRootPart")
+			if not humanoid or not rootPart then return end
+			
+			local sound = Instance.new("Sound")
+			sound.SoundId = "rbxassetid://9114397505"
+			sound.Volume = 1
+			sound.Parent = rootPart
+			sound:Play()
+			
+			-- Multicolor chaos aura
+			local chaosAura = Instance.new("Part")
+			chaosAura.Name = "ChaosAura"
+			chaosAura.Size = Vector3.new(21, 21, 21)
+			chaosAura.Shape = Enum.PartType.Ball
+			chaosAura.Transparency = 0.75
+			chaosAura.Color = Color3.fromRGB(255, 0, 255)
+			chaosAura.Material = Enum.Material.Neon
+			chaosAura.CanCollide = false
+			chaosAura.Anchored = true
+			chaosAura.Parent = workspace
+			
+			local particles = Instance.new("ParticleEmitter")
+			particles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+			particles.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+				ColorSequenceKeypoint.new(0.25, Color3.fromRGB(255, 255, 0)),
+				ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 0)),
+				ColorSequenceKeypoint.new(0.75, Color3.fromRGB(0, 255, 255)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 255))
+			})
+			particles.Size = NumberSequence.new(1, 2)
+			particles.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0),
+				NumberSequenceKeypoint.new(1, 1)
+			})
+			particles.Lifetime = NumberRange.new(1, 2)
+			particles.Rate = 120
+			particles.Speed = NumberRange.new(10, 20)
+			particles.Parent = rootPart
+			
+			-- Chaos orbs
+			local orbs = {}
+			local orbColors = {
+				Color3.fromRGB(255, 0, 0),
+				Color3.fromRGB(0, 255, 0),
+				Color3.fromRGB(0, 0, 255),
+				Color3.fromRGB(255, 255, 0),
+				Color3.fromRGB(255, 0, 255),
+				Color3-- Add these to your Custom_PowerTools table:
+-- "PLASMA SURGE", "TOXIC VENOM", "TIME WARP", "CRYSTAL FORTRESS", "BLOOD MOON", "DRAGON SPIRIT", "NEBULA VOID", "EARTH SHAKER", "WIND DANCER", "CHAOS BREAKER"
+
+["PLASMA SURGE"] = function(localPlayer)
+	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+	local backpack = localPlayer.Backpack
+	
+	local existing = backpack:FindFirstChild("PLASMA SURGE") or character:FindFirstChild("PLASMA SURGE")
+	if existing then return existing end
+	
+	local plasmaTool = Instance.new("Tool")
+	plasmaTool.Name = "PLASMA SURGE"
+	plasmaTool.RequiresHandle = false
+	
+	plasmaTool.Equipped:Connect(function()
+		spawn(function()
+			local char = localPlayer.Character
+			if not char then return end
+			
+			local humanoid = char:FindFirstChild("Humanoid")
+			local rootPart = char:FindFirstChild("HumanoidRootPart")
+			if not humanoid or not rootPart then return end
+			
+			local sound = Instance.new("Sound")
+			sound.SoundId = "rbxassetid://9114397505"
+			sound.Volume = 0.8
+			sound.Parent = rootPart
+			sound:Play()
+			
+			-- Bright plasma aura
+			local plasmaAura = Instance.new("Part")
+			plasmaAura.Name = "PlasmaAura"
+			plasmaAura.Size = Vector3.new(16, 16, 16)
+			plasmaAura.Shape = Enum.PartType.Ball
+			plasmaAura.Transparency = 0.6
+			plasmaAura.Color = Color3.fromRGB(0, 255, 255)
+			plasmaAura.Material = Enum.Material.Neon
+			plasmaAura.CanCollide = false
+			plasmaAura.Anchored = true
+			plasmaAura.Parent = workspace
+			
+			local light = Instance.new("PointLight")
+			light.Color = Color3.fromRGB(0, 255, 255)
+			light.Brightness = 7
+			light.Range = 35
+			light.Parent = plasmaAura
+			
+			local particles = Instance.new("ParticleEmitter")
+			particles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+			particles.Color = ColorSequence.new(Color3.fromRGB(0, 255, 255))
+			particles.Size = NumberSequence.new(0.5, 1.5)
+			particles.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0),
+				NumberSequenceKeypoint.new(1, 1)
+			})
+			particles.Lifetime = NumberRange.new(0.8, 1.5)
+			particles.Rate = 150
+			particles.Speed = NumberRange.new(10, 20)
+			particles.Parent = rootPart
+			
+			-- Plasma orbs
+			local orbs = {}
+			for i = 1, 8 do
+				local orb = Instance.new("Part")
+				orb.Size = Vector3.new(2, 2, 2)
+				orb.Shape = Enum.PartType.Ball
+				orb.Material = Enum.Material.Neon
+				orb.Color = Color3.fromRGB(0, 255, 255)
+				orb.Transparency = 0.3
+				orb.CanCollide = false
+				orb.Anchored = true
+				orb.Parent = workspace
+				table.insert(orbs, orb)
+			end
+			
+			local effectActive = true
+			local orbAngle = 0
+			
+			spawn(function()
+				while effectActive and char.Parent and rootPart.Parent do
+					plasmaAura.CFrame = rootPart.CFrame
+					
+					for i, orb in ipairs(orbs) do
+						if orb and orb.Parent then
+							local offset = (i - 1) * (math.pi * 2 / 8)
+							local radius = 7
+							local x = math.cos(orbAngle * 2 + offset) * radius
+							local z = math.sin(orbAngle * 2 + offset) * radius
+							local y = math.sin(orbAngle * 3 + i) * 2
+							orb.CFrame = rootPart.CFrame * CFrame.new(x, y, z)
+						end
+					end
+					
+					orbAngle = orbAngle + 0.1
+					task.wait()
+				end
+			end)
+			
+			-- Plasma blast
+			spawn(function()
+				while effectActive and char.Parent and rootPart.Parent do
+					for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+						if otherPlayer ~= localPlayer and otherPlayer.Character then
+							local otherRoot = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+							local otherHumanoid = otherPlayer.Character:FindFirstChild("Humanoid")
+							
+							if otherRoot and otherRoot.Parent and otherHumanoid then
+								local distance = (rootPart.Position - otherRoot.Position).Magnitude
+								if distance <= 22 then
+									otherHumanoid:TakeDamage(6)
+									
+									-- Plasma explosion
+									local blast = Instance.new("Part")
+									blast.Size = Vector3.new(5, 5, 5)
+									blast.Shape = Enum.PartType.Ball
+									blast.Material = Enum.Material.Neon
+									blast.Color = Color3.fromRGB(0, 255, 255)
+									blast.Transparency = 0.3
+									blast.Anchored = true
+									blast.CanCollide = false
+									blast.Position = otherRoot.Position
+									blast.Parent = workspace
+									
+									spawn(function()
+										for i = 1, 10 do
+											blast.Size = blast.Size + Vector3.new(1.5, 1.5, 1.5)
+											blast.Transparency = 0.3 + (i / 10) * 0.7
+											task.wait(0.04)
+										end
+										blast:Destroy()
+									end)
+								end
+							end
+						end
+					end
+					task.wait(1)
+				end
+			end)
+			
+			wait(10)
+			effectActive = false
+			particles.Enabled = false
+			
+			if plasmaAura then plasmaAura:Destroy() end
+			for _, orb in ipairs(orbs) do
+				if orb then orb:Destroy() end
+			end
+			task.wait(1)
+			if sound then sound:Destroy() end
+		end)
+	end)
+	
+	plasmaTool.Parent = backpack
+	return plasmaTool
+end,
+
+["TOXIC VENOM"] = function(localPlayer)
+	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+	local backpack = localPlayer.Backpack
+	
+	local existing = backpack:FindFirstChild("TOXIC VENOM") or character:FindFirstChild("TOXIC VENOM")
+	if existing then return existing end
+	
+	local toxicTool = Instance.new("Tool")
+	toxicTool.Name = "TOXIC VENOM"
+	toxicTool.RequiresHandle = false
+	
+	toxicTool.Equipped:Connect(function()
+		spawn(function()
+			local char = localPlayer.Character
+			if not char then return end
+			
+			local humanoid = char:FindFirstChild("Humanoid")
+			local rootPart = char:FindFirstChild("HumanoidRootPart")
+			if not humanoid or not rootPart then return end
+			
+			local sound = Instance.new("Sound")
+			sound.SoundId = "rbxassetid://5803898740"
+			sound.Volume = 0.7
+			sound.Parent = rootPart
+			sound:Play()
+			
+			-- Green toxic aura
+			local toxicAura = Instance.new("Part")
+			toxicAura.Name = "ToxicAura"
+			toxicAura.Size = Vector3.new(18, 18, 18)
+			toxicAura.Shape = Enum.PartType.Ball
+			toxicAura.Transparency = 0.7
+			toxicAura.Color = Color3.fromRGB(0, 255, 0)
+			toxicAura.Material = Enum.Material.Neon
+			toxicAura.CanCollide = false
+			toxicAura.Anchored = true
+			toxicAura.Parent = workspace
+			
+			local particles = Instance.new("ParticleEmitter")
+			particles.Texture = "rbxasset://textures/particles/smoke_main.dds"
+			particles.Color = ColorSequence.new(Color3.fromRGB(0, 255, 0))
+			particles.Size = NumberSequence.new(2, 3)
+			particles.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.4),
+				NumberSequenceKeypoint.new(1, 1)
+			})
+			particles.Lifetime = NumberRange.new(2, 3)
+			particles.Rate = 70
+			particles.Speed = NumberRange.new(2, 4)
+			particles.Parent = rootPart
+			
+			-- Poison puddles
+			local puddles = {}
+			for i = 1, 6 do
+				local puddle = Instance.new("Part")
+				puddle.Size = Vector3.new(8, 0.2, 8)
+				puddle.Material = Enum.Material.Neon
+				puddle.Color = Color3.fromRGB(0, 200, 0)
+				puddle.Transparency = 0.5
+				puddle.CanCollide = false
+				puddle.Anchored = true
+				puddle.Parent = workspace
+				table.insert(puddles, puddle)
+			end
+			
+			local effectActive = true
+			local puddleAngle = 0
+			
+			spawn(function()
+				while effectActive and char.Parent and rootPart.Parent do
+					toxicAura.CFrame = rootPart.CFrame
+					
+					for i, puddle in ipairs(puddles) do
+						if puddle and puddle.Parent then
+							local offset = (i - 1) * (math.pi * 2 / 6)
+							local radius = 12
+							local x = math.cos(puddleAngle + offset) * radius
+							local z = math.sin(puddleAngle + offset) * radius
+							puddle.CFrame = rootPart.CFrame * CFrame.new(x, -3, z) * CFrame.Angles(0, puddleAngle, 0)
+						end
+					end
+					
+					puddleAngle = puddleAngle + 0.03
+					task.wait()
+				end
+			end)
+			
+			-- Poison damage over time
+			local poisonedPlayers = {}
+			spawn(function()
+				while effectActive and char.Parent and rootPart.Parent do
+					for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+						if otherPlayer ~= localPlayer and otherPlayer.Character then
+							local otherRoot = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+							local otherHumanoid = otherPlayer.Character:FindFirstChild("Humanoid")
+							
+							if otherRoot and otherRoot.Parent and otherHumanoid then
+								local distance = (rootPart.Position - otherRoot.Position).Magnitude
+								if distance <= 20 then
+									if not poisonedPlayers[otherPlayer.UserId] then
+										poisonedPlayers[otherPlayer.UserId] = true
+										
+										-- Apply poison effect
+										spawn(function()
+											for tick = 1, 10 do
+												if otherHumanoid and otherHumanoid.Parent and otherHumanoid.Health > 0 then
+													otherHumanoid:TakeDamage(2)
+												else
+													break
+												end
+												task.wait(0.5)
+											end
+											poisonedPlayers[otherPlayer.UserId] = nil
+										end)
+									end
+								end
+							end
+						end
+					end
+					task.wait(1)
+				end
+			end)
+			
+			wait(12)
+			effectActive = false
+			particles.Enabled = false
+			
+			if toxicAura then toxicAura:Destroy() end
+			for _, puddle in ipairs(puddles) do
+				if puddle then puddle:Destroy() end
+			end
+			task.wait(1)
+			if sound then sound:Destroy() end
+		end)
+	end)
+	
+	toxicTool.Parent = backpack
+	return toxicTool
+end,
+
+["TIME WARP"] = function(localPlayer)
+	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+	local backpack = localPlayer.Backpack
+	
+	local existing = backpack:FindFirstChild("TIME WARP") or character:FindFirstChild("TIME WARP")
+	if existing then return existing end
+	
+	local timeTool = Instance.new("Tool")
+	timeTool.Name = "TIME WARP"
+	timeTool.RequiresHandle = false
+	
+	timeTool.Equipped:Connect(function()
+		spawn(function()
+			local char = localPlayer.Character
+			if not char then return end
+			
+			local humanoid = char:FindFirstChild("Humanoid")
+			local rootPart = char:FindFirstChild("HumanoidRootPart")
+			if not humanoid or not rootPart then return end
+			
+			local sound = Instance.new("Sound")
+			sound.SoundId = "rbxassetid://5847943738"
+			sound.Volume = 0.9
+			sound.Parent = rootPart
+			sound:Play()
+			
+			-- Speed boost
+			local originalSpeed = humanoid.WalkSpeed
+			humanoid.WalkSpeed = 100
+			
+			-- Time distortion aura
+			local timeAura = Instance.new("Part")
+			timeAura.Name = "TimeAura"
+			timeAura.Size = Vector3.new(20, 20, 20)
+			timeAura.Shape = Enum.PartType.Ball
+			timeAura.Transparency = 0.85
+			timeAura.Color = Color3.fromRGB(150, 150, 255)
+			timeAura.Material = Enum.Material.Neon
+			timeAura.CanCollide = false
+			timeAura.Anchored = true
+			timeAura.Parent = workspace
+			
+			local particles = Instance.new("ParticleEmitter")
+			particles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+			particles.Color = ColorSequence.new(Color3.fromRGB(150, 150, 255))
+			particles.Size = NumberSequence.new(0.6, 1.2)
+			particles.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0),
+				NumberSequenceKeypoint.new(1, 1)
+			})
+			particles.Lifetime = NumberRange.new(1, 2)
+			particles.Rate = 100
+			particles.Speed = NumberRange.new(15, 25)
+			particles.Parent = rootPart
+			
+			-- Clock rings
+			local rings = {}
+			for i = 1, 3 do
+				local ring = Instance.new("Part")
+				ring.Size = Vector3.new(15 + i * 5, 0.3, 15 + i * 5)
+				ring.Shape = Enum.PartType.Cylinder
+				ring.Material = Enum.Material.Neon
+				ring.Color = Color3.fromRGB(150, 150, 255)
+				ring.Transparency = 0.5
+				ring.CanCollide = false
+				ring.Anchored = true
+				ring.Parent = workspace
+				table.insert(rings, ring)
+			end
+			
+			local effectActive = true
+			local ringAngle = 0
+			
+			spawn(function()
+				while effectActive and char.Parent and rootPart.Parent do
+					timeAura.CFrame = rootPart.CFrame
+					
+					for i, ring in ipairs(rings) do
+						if ring and ring.Parent then
+							ring.CFrame = rootPart.CFrame 
+								* CFrame.new(0, 0, 0) 
+								* CFrame.Angles(math.rad(90), ringAngle * (i + 1), 0)
+						end
+					end
+					
+					ringAngle = ringAngle + 0.08
+					task.wait()
+				end
+			end)
+			
+			-- Slow enemies
+			spawn(function()
+				while effectActive and char.Parent and rootPart.Parent do
+					for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+						if otherPlayer ~= localPlayer and otherPlayer.Character then
+							local otherRoot = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+							local otherHumanoid = otherPlayer.Character:FindFirstChild("Humanoid")
+							
+							if otherRoot and otherRoot.Parent and otherHumanoid then
+								local distance = (rootPart.Position - otherRoot.Position).Magnitude
+								if distance <= 25 then
+									otherHumanoid:TakeDamage(3)
+									
+									-- Slow effect
+									if otherHumanoid.WalkSpeed > 3 then
+										local originalEnemySpeed = otherHumanoid.WalkSpeed
+										otherHumanoid.WalkSpeed = 3
+										
+										spawn(function()
+											wait(2)
+											if otherHumanoid and otherHumanoid.Parent then
+												otherHumanoid.WalkSpeed = originalEnemySpeed
+											end
+										end)
+									end
+								end
+							end
+						end
+					end
+					task.wait(1)
+				end
+			end)
+			
+			wait(9)
+			effectActive = false
+			particles.Enabled = false
+			humanoid.WalkSpeed = originalSpeed
+			
+			if timeAura then timeAura:Destroy() end
+			for _, ring in ipairs(rings) do
+				if ring then ring:Destroy() end
+			end
+			task.wait(1)
+			if sound then sound:Destroy() end
+		end)
+	end)
+	
+	timeTool.Parent = backpack
+	return timeTool
+end,
+
+["CRYSTAL FORTRESS"] = function(localPlayer)
+	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+	local backpack = localPlayer.Backpack
+	
+	local existing = backpack:FindFirstChild("CRYSTAL FORTRESS") or character:FindFirstChild("CRYSTAL FORTRESS")
+	if existing then return existing end
+	
+	local crystalTool = Instance.new("Tool")
+	crystalTool.Name = "CRYSTAL FORTRESS"
+	crystalTool.RequiresHandle = false
+	
+	crystalTool.Equipped:Connect(function()
+		spawn(function()
+			local char = localPlayer.Character
+			if not char then return end
+			
+			local humanoid = char:FindFirstChild("Humanoid")
+			local rootPart = char:FindFirstChild("HumanoidRootPart")
+			if not humanoid or not rootPart then return end
+			
+			local sound = Instance.new("Sound")
+			sound.SoundId = "rbxassetid://5841374773"
+			sound.Volume = 0.8
+			sound.Parent = rootPart
+			sound:Play()
+			
+			-- Full heal
+			humanoid.Health = humanoid.MaxHealth
+			
+			-- Crystal barrier
+			local barrier = Instance.new("Part")
+			barrier.Name = "CrystalBarrier"
+			barrier.Size = Vector3.new(16, 16, 16)
+			barrier.Shape = Enum.PartType.Ball
+			barrier.Transparency = 0.4
+			barrier.Color = Color3.fromRGB(200, 100, 255)
+			barrier.Material = Enum.Material.Glass
+			barrier.CanCollide = false
+			barrier.Anchored = true
+			barrier.Parent = workspace
+			
+			local particles = Instance.new("ParticleEmitter")
+			particles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+			particles.Color = ColorSequence.new(Color3.fromRGB(200, 100, 255))
+			particles.Size = NumberSequence.new(0.7, 1.3)
+			particles.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0),
+				NumberSequenceKeypoint.new(1, 1)
+			})
+			particles.Lifetime = NumberRange.new(1, 2)
+			particles.Rate = 60
+			particles.Speed = NumberRange.new(3, 6)
+			particles.Parent = rootPart
+			
+			-- Crystal shards
+			local shards = {}
+			for i = 1, 10 do
+				local shard = Instance.new("Part")
+				shard.Size = Vector3.new(1, 5, 1)
+				shard.Material = Enum.Material.Glass
+				shard.Color = Color3.fromRGB(200, 100, 255)
+				shard.Transparency = 0.3
+				shard.CanCollide = false
+				shard.Anchored = true
+				shard.Parent = workspace
+				table.insert(shards, shard)
+			end
+			
+			local effectActive = true
+			local shardAngle = 0
+			
+			spawn(function()
+				while effectActive and char.Parent and rootPart.Parent do
+					barrier.CFrame = rootPart.CFrame
+					
+					for i, shard in ipairs(shards) do
+						if shard and shard.Parent then
+							local offset = (i - 1) * (math.pi * 2 / 10)
+							local radius = 10
+							local x = math.cos(shardAngle + offset) * radius
+							local z = math.sin(shardAngle + offset) * radius
+							local y = math.sin(shardAngle * 2 + i) * 2
+							shard.CFrame = rootPart.CFrame * CFrame.new(x, y, z) * CFrame.Angles(shardAngle * 3, 0, math.rad(45))
+						end
+					end
+					
+					shardAngle = shardAngle + 0.06
+					task.wait()
+				end
+			end)
+			
+			-- Reflect damage and heal
+			spawn(function()
+				while effectActive and char.Parent and rootPart.Parent do
+					humanoid.Health = math.min(humanoid.Health + 5, humanoid.MaxHealth)
+					
+					for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+						if otherPlayer ~= localPlayer and otherPlayer.Character then
+							local otherRoot = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+							local otherHumanoid = otherPlayer.Character:FindFirstChild("Humanoid")
+							
+							if otherRoot and otherRoot.Parent and otherHumanoid then
+								local distance = (rootPart.Position - otherRoot.Position).Magnitude
+								if distance <= 12 then
+									otherHumanoid:TakeDamage(8)
+									
+									-- Knockback
+									local direction = (otherRoot.Position - rootPart.Position).Unit
+									local bodyVelocity = Instance.new("BodyVelocity")
+									bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+									bodyVelocity.Velocity = direction * 60 + Vector3.new(0, 25, 0)
+									bodyVelocity.Parent = otherRoot
+									game:GetService("Debris"):AddItem(bodyVelocity, 0.3)
+								end
+							end
+						end
+					end
+					task.wait(1)
+				end
+			end)
+			
+			wait(11)
+			effectActive = false
+			particles.Enabled = false
+			
+			if barrier then barrier:Destroy() end
+			for _, shard in ipairs(shards) do
+				if shard then shard:Destroy() end
+			end
+			task.wait(1)
+			if sound then sound:Destroy() end
+		end)
+	end)
+	
+	crystalTool.Parent = backpack
+	return crystalTool
+end,
+
+["BLOOD MOON"] = function(localPlayer)
+	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+	local backpack = localPlayer.Backpack
+	
+	local existing = backpack:FindFirstChild("BLOOD MOON") or character:FindFirstChild("BLOOD MOON")
+	if existing then return existing end
+	
+	local bloodTool = Instance.new("Tool")
+	bloodTool.Name = "BLOOD MOON"
+	bloodTool.RequiresHandle = false
+	
+	bloodTool.Equipped:Connect(function()
+		spawn(function()
+			local char = localPlayer.Character
+			if not char then return end
+			
+			local humanoid = char:FindFirstChild("Humanoid")
+			local rootPart = char:FindFirstChild("HumanoidRootPart")
+			if not humanoid or not rootPart then return end
+			
+			local sound = Instance.new("Sound")
+			sound.SoundId = "rbxassetid://7355143816"
+			sound.Volume = 1
+			sound.Parent = rootPart
+			sound:Play()
+			
+			-- Dark red aura
+			local bloodAura = Instance.new("Part")
+			bloodAura.Name = "BloodAura"
+			bloodAura.Size = Vector3.new(19, 19, 19)
+			bloodAura.Shape = Enum.PartType.Ball
+			bloodAura.Transparency = 0.7
+			bloodAura.Color = Color3.fromRGB(180, 0, 0)
+			bloodAura.Material = Enum.Material.Neon
+			bloodAura.CanCollide = false
+			bloodAura.Anchored = true
+			bloodAura.Parent = workspace
+			
+			-- Create blood moon above
+			local moon = Instance.new("Part")
+			moon.Size = Vector3.new(12, 12, 0.5)
+			moon.Shape = Enum.PartType.Cylinder
+			moon.Material = Enum.Material.Neon
+			moon.Color = Color3.fromRGB(200, 0, 0)
+			moon.Transparency = 0.3
+			moon.CanCollide = false
+			moon.Anchored = true
+			moon.Parent = workspace
+			
+			local moonLight = Instance.new("PointLight")
+			moonLight.Color = Color3.fromRGB(200, 0, 0)
+			moonLight.Brightness = 8
+			moonLight.Range = 40
+			moonLight.Parent = moon
+			
+			local particles = Instance.new("ParticleEmitter")
+			particles.Texture = "rbxasset://textures/particles/smoke_main.dds"
+			particles.Color = ColorSequence.new(Color3.fromRGB(180, 0, 0))
+			particles.Size = NumberSequence.new(1.5, 2.5)
+			particles.Transparency = NumberSequence.new({
+				ColorSequenceKeypoint.new(0, 0.5),
+				ColorSequenceKeypoint.new(1, 1)
+			})
+			particles.Lifetime = NumberRange.new(1.5, 2.5)
+			particles.Rate = 70
+			particles.Speed = NumberRange.new(3, 7)
+			particles.Parent = rootPart
+			
+			local effectActive = true
+			
+			spawn(function()
+				while effectActive and char.Parent and rootPart.Parent do
+					bloodAura.CFrame = rootPart.CFrame
+					moon.CFrame = rootPart.CFrame * CFrame.new(0, 20, 0) * CFrame.Angles(0, 0, math.rad(90))
+					task.wait()
+				end
+			end)
+			
+			-- Life steal and berserk
+			spawn(function()
+				while effectActive and char.Parent and rootPart.Parent do
+					for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+						if otherPlayer ~= localPlayer and otherPlayer.Character then
+							local otherRoot = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+							local otherHumanoid = otherPlayer.Character:FindFirstChild("Humanoid")
+							
+							if otherRoot and otherRoot.Parent and otherHumanoid and otherHumanoid.Health > 0 then
+								local distance = (rootPart.Position - otherRoot.Position).Magnitude
+								if distance <= 22 then
+									local damage = 7
+									otherHumanoid:TakeDamage(damage)
+									
+									-- Heal self
+									humanoid.Health = math.min(humanoid.Health + damage, humanoid.MaxHealth)
+									
+									-- Blood effect
+									local bloodEffect = Instance.new("Part")
+									bloodEffect.Size = Vector3.new(3, 3, 3)
+									bloodEffect.Shape = Enum.PartType.Ball
+									bloodEffect.Material = Enum.Material.Neon
+									bloodEffect.Color = Color3.fromRGB(200, 0, 0)
+									bloodEffect.Transparency = 0.3
+									bloodEffect.Anchored = true
+									bloodEffect.CanCollide = false
+									bloodEffect.Position = otherRoot.Position
+									bloodEffect.Parent = workspace
+									
+									spawn(function()
+										for i = 1, 8 do
+											bloodEffect.Size = bloodEffect.Size + Vector3.new(0.5, 0.5, 0.5)
+											bloodEffect.Transparency = 0.3 + (i / 8) * 0.7
+											task.wait(0.05)
+										end
+										bloodEffect:Destroy()
+									end)
+								end
+							end
+						end
+					end
+					task.wait(0.8)
+				end
+			end)
+			
+			wait(13)
+			effectActive = false
+			particles.Enabled = false
+			
+			if bloodAura then bloodAura:Destroy() end
+			if moon then moon:Destroy() end
+			task.wait(1)
+			if sound then sound:Destroy() end
+		end)
+	end)
+	
+	bloodTool.Parent = backpack
+	return bloodTool
+end,
 ["CELESTIAL WRATH"] = function(localPlayer)
 	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
 	local backpack = localPlayer.Backpack
