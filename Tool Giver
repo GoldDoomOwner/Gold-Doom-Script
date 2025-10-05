@@ -1,6 +1,6 @@
 local ToolModule = {}
 
-local Custom_PowerTools = {"Awaken", "Oblivious","Titanium", "Drug Abused", "Soul Monarch", "Creation", "AkazaDash", "ESPER RAGE", "GOLDEN MONARCH", "VOID WALKER", "STORM BREAKER", "CRIMSON REAPER", "CELESTIAL WRATH", "SHADOW ASSASSIN", "INFERNO KING", "FROZEN DOMAIN", "GRAVITY TITAN"}
+local Custom_PowerTools = {"Awaken", "Oblivious","Titanium", "Drug Abused", "Soul Monarch", "Creation", "AkazaDash", "ESPER RAGE", "GOLDEN MONARCH", "VOID WALKER", "STORM BREAKER", "CRIMSON REAPER", "CELESTIAL WRATH", "SHADOW ASSASSIN", "INFERNO KING", "FROZEN DOMAIN", "GRAVITY TITAN", "PLASMA SURGE", "TOXIC VENOM", "TIME WARP", "CRYSTAL FORTRESS", "BLOOD MOON", "DRAGON SPIRIT", "NEBULA VOID", "EARTH SHAKER", "WIND DANCER", "CHAOS BREAKER"}
 
 -- Tool creation functions
 local ToolCreators = {
