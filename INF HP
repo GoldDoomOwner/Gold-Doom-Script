@@ -1,0 +1,69 @@
+-- In ReplicatedStorage, create a ModuleScript named "InfHealthModule"
+local module = {}
+
+local Players = game:GetService("Players")
+local playersWithInfHealth = {}
+
+function module.enableInfiniteHealth(player, remoteEvent)
+    if playersWithInfHealth[player.UserId] then
+        return
+    end
+    
+    playersWithInfHealth[player.UserId] = true
+    
+    local function setupCharacter(character)
+        if not playersWithInfHealth[player.UserId] then return end
+        
+        local humanoid = character:WaitForChild("Humanoid")
+        
+        humanoid.MaxHealth = math.huge
+        humanoid.Health = math.huge
+        
+        local connection
+        connection = humanoid.HealthChanged:Connect(function(health)
+            if playersWithInfHealth[player.UserId] and health < humanoid.MaxHealth then
+                humanoid.Health = humanoid.MaxHealth
+            end
+        end)
+        
+        character.AncestryChanged:Connect(function()
+            connection:Disconnect()
+        end)
+    end
+    
+    player.CharacterAdded:Connect(setupCharacter)
+    
+    if player.Character then
+        setupCharacter(player.Character)
+    end
+end
+
+function module.disableInfiniteHealth(player)
+    playersWithInfHealth[player.UserId] = nil
+    
+    if player.Character then
+        local humanoid = player.Character:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid.MaxHealth = 100
+            humanoid.Health = 100
+        end
+    end
+end
+
+function module.init(remoteEvent)
+    remoteEvent.OnServerEvent:Connect(function(player, enabled)
+        if enabled then
+            module.enableInfiniteHealth(player, remoteEvent)
+            print(player.Name .. " enabled infinite health")
+        else
+            module.disableInfiniteHealth(player)
+            print(player.Name .. " disabled infinite health")
+        end
+    end)
+    
+    Players.PlayerRemoving:Connect(function(player)
+        playersWithInfHealth[player.UserId] = nil
+    end)
+end
+
+return module
