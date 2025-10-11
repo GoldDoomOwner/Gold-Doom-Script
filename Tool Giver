@@ -3815,8 +3815,8 @@ end,
 -- and paste them here before the closing brace
 
 -- THIS IS THE KEY FUNCTION YOU NEED
-function ToolModule:GetTools(tool1Name, tool2Name)
-	local player = game.Players.LocalPlayer
+function ToolModule:GetTools(tool1Name, tool2Name, plr)
+	local player = plr
 	
 	-- Create first tool if specified
 	if tool1Name and tool1Name ~= "" then
